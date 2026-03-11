@@ -28,26 +28,18 @@ if(airport=="C"){
 
 if(!url){
  $done({
-  entries:[
-   {
-    title:name||"机场",
-    content:"未填写订阅地址"
-   }
-  ]
+  title:name || "机场流量",
+  content:"未填写订阅地址"
  })
  return
 }
 
-$httpClient.get(url,function(err,res,data){
+$httpClient.head(url,function(err,res,data){
 
  if(err){
   $done({
-   entries:[
-    {
-     title:name,
-     content:"获取失败"
-    }
-   ]
+   title:name,
+   content:"请求失败"
   })
   return
  }
@@ -58,12 +50,8 @@ $httpClient.get(url,function(err,res,data){
 
  if(!header){
   $done({
-   entries:[
-    {
-     title:name,
-     content:"未检测到流量信息"
-    }
-   ]
+   title:name,
+   content:"未检测到流量信息"
   })
   return
  }
@@ -96,25 +84,15 @@ $httpClient.get(url,function(err,res,data){
 
  let percent=((used/total)*100).toFixed(0)
 
+ let content =
+ "剩余 "+remainGB+"GB\n"+
+ "已用 "+usedGB+"GB / "+totalGB+"GB\n"+
+ "使用 "+percent+"%\n"+
+ "重置 "+reset+"日"
+
  $done({
-  entries:[
-   {
-    title:name,
-    content:"剩余 "+remainGB+"GB"
-   },
-   {
-    title:"已用",
-    content:usedGB+"GB / "+totalGB+"GB"
-   },
-   {
-    title:"使用率",
-    content:percent+"%"
-   },
-   {
-    title:"重置日",
-    content:reset+"日"
-   }
-  ]
+  title:name,
+  content:content
  })
 
 })
