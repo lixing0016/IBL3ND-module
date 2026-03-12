@@ -1,101 +1,89 @@
-function bytesToGB(b){
-  return (b/1024/1024/1024).toFixed(2)
+function daysUntil(month, day) {
+
+  const now = new Date()
+  const year = now.getFullYear()
+
+  let target = new Date(year, month - 1, day)
+
+  if (target < now) {
+    target = new Date(year + 1, month - 1, day)
+  }
+
+  return Math.ceil((target - now) / 86400000)
 }
 
-let airport = $arguments.airport
+function secondSundayOfMay(){
 
-let name=""
-let url=""
-let reset=""
+  const year = new Date().getFullYear()
+  const first = new Date(year,4,1)
 
-if(airport=="A"){
- name=$argument["A名称"]
- url=$argument["A地址"]
- reset=$argument["A重置"]
-}
+  const day = first.getDay()
 
-if(airport=="B"){
- name=$argument["B名称"]
- url=$argument["B地址"]
- reset=$argument["B重置"]
-}
+  const firstSunday = day === 0 ? 1 : 8 - day
+  const secondSunday = firstSunday + 7
 
-if(airport=="C"){
- name=$argument["C名称"]
- url=$argument["C地址"]
- reset=$argument["C重置"]
-}
+  const target = new Date(year,4,secondSunday)
 
-function render(text){
-
- return {
-  title:name || "机场流量",
-  content:text
- }
+  return Math.ceil((target - new Date()) / 86400000)
 
 }
 
-if(!url){
+function thirdSundayOfJune(){
 
- $done(render("未填写订阅地址"))
- return
+  const year = new Date().getFullYear()
+  const first = new Date(year,5,1)
+
+  const day = first.getDay()
+
+  const firstSunday = day === 0 ? 1 : 8 - day
+  const thirdSunday = firstSunday + 14
+
+  const target = new Date(year,5,thirdSunday)
+
+  return Math.ceil((target - new Date()) / 86400000)
 
 }
 
-$httpClient.head(url,function(err,res,data){
+async function main(){
 
- if(err){
+  const qingming = daysUntil(4,4)
+  const laodong = daysUntil(5,1)
+  const duanwu = daysUntil(5,31)
 
-  $done(render("请求失败"))
-  return
+  const chunfen = daysUntil(3,20)
+  const guyu = daysUntil(4,20)
 
- }
+  const longtaitou = daysUntil(3,1)
+  const qixi = daysUntil(8,29)
+  const zhongyuan = daysUntil(9,6)
 
- let header =
-  res.headers["subscription-userinfo"] ||
-  res.headers["Subscription-Userinfo"]
+  const mother = secondSundayOfMay()
+  const father = thirdSundayOfJune()
+  const halloween = daysUntil(10,31)
 
- if(!header){
+  const line1 = `清明节 ${qingming}天 | 劳动节 ${laodong}天 | 端午节 ${duanwu}天`
+  const line2 = `春分 ${chunfen}天 | 清明 ${qingming}天 | 谷雨 ${guyu}天`
+  const line3 = `龙抬头 ${longtaitou}天 | 七夕节 ${qixi}天 | 中元节 ${zhongyuan}天`
+  const line4 = `母亲节 ${mother}天 | 父亲节 ${father}天 | 万圣节 ${halloween}天`
 
-  $done(render("未检测到流量"))
-  return
+  const text =
+`📅 节日倒计时
 
- }
+${line1}
+${line2}
+${line3}
+${line4}`
 
- let upload=0
- let download=0
- let total=0
+  $widget.setTimeline({
+    render: ctx => {
+      return {
+        type: "text",
+        text: text,
+        align: "left"
+      }
+    }
+  })
 
- header.split(";").forEach(function(item){
+}
 
-  let p=item.split("=")
-
-  if(p.length!=2) return
-
-  let k=p[0].trim()
-  let v=parseInt(p[1])
-
-  if(k=="upload") upload=v
-  if(k=="download") download=v
-  if(k=="total") total=v
-
- })
-
- let used=upload+download
- let remain=total-used
-
- let usedGB=bytesToGB(used)
- let totalGB=bytesToGB(total)
- let remainGB=bytesToGB(remain)
-
- let percent=((used/total)*100).toFixed(0)
-
- let text =
-  "剩余 "+remainGB+"GB\n"+
-  "已用 "+usedGB+" / "+totalGB+"GB\n"+
-  "使用率 "+percent+"%\n"+
-  "重置 "+reset+"日"
-
- $done(render(text))
-
-})
+main()
