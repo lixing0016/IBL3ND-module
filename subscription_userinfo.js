@@ -1,6 +1,6 @@
 /**
  * 📅 节日倒计时小组件
- * 严格遵循 Egern 官方文档规范
+ * 修复：使用数字字体大小
  */
 
 const HOLIDAYS = {
@@ -128,7 +128,7 @@ function createText(text, options = {}) {
     type: 'text',
     text: text,
     font: {
-      size: options.size || 'caption',
+      size: options.size || 13,  // ✅ 使用数字
       weight: options.weight || 'regular'
     },
     textColor: options.color || { light: '#1D1D1F', dark: '#F5F5F7' },
@@ -184,14 +184,14 @@ export default async function(ctx) {
   const children = [
     createStack([
       createImage('calendar', { size: 24 }),
-      createText(title, { size: 'headline', weight: 'semibold' })
+      createText(title, { size: 16, weight: 'semibold' })  // ✅ 使用数字 16
     ], { direction: 'row', align: 'center', gap: 8 })
   ];
   
   rows.forEach((row, index) => {
     children.push(
       createText(row, {
-        size: 'caption',
+        size: 13,  // ✅ 使用数字 13
         weight: index === 0 ? 'semibold' : 'regular',
         color: { light: '#333333', dark: '#CCCCCC' },
         maxLines: 1
