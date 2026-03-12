@@ -1,0 +1,31 @@
+name: 机场流量小组件
+desc: 显示机场订阅流量
+author: iBL3ND
+homepage: https://egernapp.com
+
+arguments:
+  NAME1: 机场1名称
+  URL1: 机场1订阅地址
+  RESET1: 机场1重置日
+
+  NAME2: 机场2名称
+  URL2: 机场2订阅地址
+  RESET2: 机场2重置日
+
+  NAME3: 机场3名称
+  URL3: 机场3订阅地址
+  RESET3: 机场3重置日
+
+  NAME4: 机场4名称
+  URL4: 机场4订阅地址
+  RESET4: 机场4重置日
+
+  NAME5: 机场5名称
+  URL5: 机场5订阅地址
+  RESET5: 机场5重置日
+
+widgets:
+  airport_traffic:
+    title: 机场流量
+    description: 显示机场流量信息
+    script: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/airport_widget.js
