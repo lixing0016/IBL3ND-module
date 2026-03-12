@@ -1,37 +1,35 @@
+# 📅 节日倒计时模块 - Egern 配置
 name: "📅 节日倒计时模块"
+author: "YourName"
+description: "显示距离节日/节气/传统节日的天数"
+
 scriptings:
   - generic:
       name: "holiday-countdown"
+      # ⚠️ 请替换为你的 GitHub raw 链接
       script_url: "https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js"
       timeout: 15
 
 widgets:
-  - name: "📅 节日倒计时（自动适配）"
+  # 配置1：默认布局（每行4个）
+  - name: "📅 节日倒计时"
     script_name: "holiday-countdown"
     env:
       TITLE: "节日倒计时"
-      # ITEMS_PER_ROW: "0"  # 0或注释掉 = 自动计算（默认）
-      # ITEMS_PER_ROW: "3"  # 强制每行3个
-      # ITEMS_PER_ROW: "4"  # 强制每行4个
-      MAX_ROWS: "5"         # 最多显示5行
-      FONT_SIZE: "14"       # 字体大小
+      ITEMS_PER_ROW: "4"
+      MAX_ROWS: "5"
       SHOW_HOLIDAYS: "true"
       SHOW_TERMS: "true"
       SHOW_TRADITIONAL: "true"
 
-  - name: "📅 节日倒计时（紧凑模式）"
+  # 配置2：紧凑布局（每行3个，字体更小）
+  - name: "📅 节日倒计时·紧凑"
     script_name: "holiday-countdown"
     env:
       TITLE: "节日倒计时"
-      ITEMS_PER_ROW: "4"    # 强制4个
-      MAX_ROWS: "4"
-      FONT_SIZE: "12"       # 字体小一点
-
-  - name: "📅 节日倒计时（宽松模式）"
-    script_name: "holiday-countdown"
-    env:
-      TITLE: "节日倒计时"
-      ITEMS_PER_ROW: "3"    # 每行3个
-      MAX_ROWS: "6"         # 显示更多行
-      FONT_SIZE: "15"       # 字体大一点
+      ITEMS_PER_ROW: "3"
+      MAX_ROWS: "6"
+      SHOW_HOLIDAYS: "true"
+      SHOW_TERMS: "true"
+      SHOW_TRADITIONAL: "true"
 
