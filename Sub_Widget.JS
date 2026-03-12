@@ -1,5 +1,5 @@
 /**
- * 机场订阅流量监控小组件 - 白底浅色版
+ * 机场订阅流量监控小组件 - 深浅色自适应版
  * 
  * 📝 使用说明：
  * 
@@ -9,19 +9,23 @@
  * 
  *    NAME1 = 翻墙                    # 机场名称（自定义）
  *    URL1 = https://xxx.com/sub...   # 订阅地址（必填）
+ *    RESET1 = 1                      # 重置日（可选，每月1日重置）
  * 
  *    NAME2 = 机场B
  *    URL2 = https://yyy.com/sub...
+ *    RESET2 = 15                     # 每月15日重置
  * 
- *    ... 最多支持 5 个机场（NAME1-5, URL1-5）
+ *    ... 最多支持 5 个机场（NAME1-5, URL1-5, RESET1-5）
  * 
  * 2️⃣ 参数说明：
  *    - NAME1-5：机场名称，显示在卡片上（必填，否则显示"机场订阅"）
  *    - URL1-5：订阅地址，从机场后台复制（必填）
+ *    - RESET1-5：流量重置日，1-28 的数字（可选）
  * 
  * 3️⃣ 示例：
  *    NAME1 = 翻墙
  *    URL1 = https://example.com/sub?token=abc123
+ *    RESET1 = 1
  * 
  *    NAME2 = 备用机场
  *    URL2 = https://example2.com/sub?token=def456
@@ -31,9 +35,10 @@
  *    - 至少需要配置 URL1 才能显示
  *    - 订阅地址需要包含完整的 token
  *    - 小组件每小时自动刷新
+ *    - 自动适配系统深色/浅色模式
  * 
  * @author 机场订阅监控
- * @version 1.0
+ * @version 2.0
  */
 
 export default async function (ctx) {
@@ -54,17 +59,33 @@ export default async function (ctx) {
   const now = new Date();
   const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-  // ✅ 白底主题配置
-  const bgGradient = {
-    type: "linear",
-    colors: ["#F5F5F7", "#FFFFFF", "#F8F8FA", "#FFFFFF"],
-    stops: [0, 0.35, 0.7, 1],
-    startPoint: { x: 0, y: 0 },
-    endPoint: { x: 0.8, y: 1 },
-  };
+  // ✅ 检测系统主题（深色/浅色）
+  const isDarkMode = ctx.appearance === 'dark' || 
+                     (typeof $environment !== 'undefined' && $environment.style === 'dark') ||
+                     false;
 
-  // ✅ 浅色主题颜色常量
-  const colors = {
+  // ✅ 根据主题选择颜色方案
+  const colors = isDarkMode ? {
+    // 深色主题
+    bgPrimary: "#1C1C1E",
+    bgSecondary: "#2C2C2E",
+    bgCard: "#2C2C2E",
+    bgCardBorder: "#3A3A3C",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#EBEBF5",
+    textTertiary: "#AEAEB2",
+    textMuted: "#636366",
+    iconPrimary: "#5856D6",
+    iconSecondary: "#8E8E93",
+    iconMuted: "#48484A",
+    error: "#FF453A",
+    warning: "#FF9F0A",
+    success: "#30D158",
+    progressBg: "#3A3A3C",
+  } : {
+    // 浅色主题
+    bgPrimary: "#F5F5F7",
+    bgSecondary: "#FFFFFF",
     bgCard: "#FFFFFF",
     bgCardBorder: "#E5E5E7",
     textPrimary: "#1D1D1F",
@@ -78,6 +99,21 @@ export default async function (ctx) {
     warning: "#FF9500",
     success: "#34C759",
     progressBg: "#E5E5EA",
+  };
+
+  // ✅ 根据主题选择背景渐变
+  const bgGradient = isDarkMode ? {
+    type: "linear",
+    colors: ["#1C1C1E", "#2C2C2E", "#1C1C1E", "#2C2C2E"],
+    stops: [0, 0.35, 0.7, 1],
+    startPoint: { x: 0, y: 0 },
+    endPoint: { x: 0.8, y: 1 },
+  } : {
+    type: "linear",
+    colors: ["#F5F5F7", "#FFFFFF", "#F8F8FA", "#FFFFFF"],
+    stops: [0, 0.35, 0.7, 1],
+    startPoint: { x: 0, y: 0 },
+    endPoint: { x: 0.8, y: 1 },
   };
 
   if (!slots.length) {
@@ -122,7 +158,7 @@ export default async function (ctx) {
   }
 
   const results = await Promise.all(slots.map((s) => fetchInfo(ctx, s)));
-  const cards = results.map((r) => buildCard(r, slots.length, colors));
+  const cards = results.map((r) => buildCard(r, slots.length, colors, isDarkMode));
 
   return {
     type: "widget",
@@ -183,7 +219,7 @@ export default async function (ctx) {
 
 // ─── 卡片构建 ─────────────────────────────────────────────────
 
-function buildCard(result, total, colors) {
+function buildCard(result, total, colors, isDarkMode) {
   const { name, error, used, totalBytes, percent, expire, remainDays } = result;
 
   const usageColor =
@@ -217,7 +253,7 @@ function buildCard(result, total, colors) {
         },
         {
           type: "text",
-          text: name,  // ✅ 显示环境变量中的名称
+          text: name,
           font: { size: "caption1", weight: "semibold" },
           textColor: colors.textPrimary,
           maxLines: 1,
@@ -283,7 +319,7 @@ function buildCard(result, total, colors) {
           },
           {
             type: "text",
-            text: name,  // ✅ 显示环境变量中的名称
+            text: name,
             font: { size: "caption1", weight: "semibold" },
             textColor: colors.textPrimary,
             maxLines: 1,
