@@ -10,13 +10,12 @@ scriptings:
       update-interval: 3600
 
 widgets:
-  - name: "节日倒计时"
+  - name: "📅 节日倒计时"
     script_name: "holiday-countdown"
     env:
       TITLE: "节日倒计时"
       SHOW_HOLIDAYS: "true"
       SHOW_TERMS: "true"
       SHOW_TRADITIONAL: "true"
-      ITEMS_PER_ROW: "3"
-      MAX_ROWS: "6"
-
+      ITEMS_PER_ROW: "4"      
+      MAX_ROWS: "5"          
