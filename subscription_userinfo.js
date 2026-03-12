@@ -1,5 +1,5 @@
 /**
- * 📅 节日倒计时小组件
+ * 📅 节日倒计时小组件 - 带年月日
  */
 
 const HOLIDAYS = {
@@ -63,7 +63,28 @@ const Lunar = (function() {
       if(offset <= md) { m = i; d = offset; break; }
       offset -= md; leap = 0;
     }
-    return { year: y, month: m, day: d };
+    
+    const nStr1 = ['日','一','二','三','四','五','六'];
+    const nStr2 = ['初','十','廿','卅'];
+    const nStr3 = ['正','二','三','四','五','六','七','八','九','十','冬','腊'];
+    const animals = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+    const gan = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+    const zhi = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    
+    let dayStr = nStr2[Math.floor((d-1)/10)] + nStr1[(d-1)%10];
+    if(d === 10) dayStr = '初十';
+    if(d === 20) dayStr = '二十';
+    if(d === 30) dayStr = '三十';
+    
+    return { 
+      year: y, 
+      month: m, 
+      day: d,
+      monthStr: nStr3[m-1], 
+      dayStr: dayStr,
+      ganZhi: gan[(y-4)%10] + zhi[(y-4)%12],
+      animal: animals[(y-4)%12]
+    };
   }
   return { getLunarDate };
 })();
@@ -131,6 +152,18 @@ export default async function(ctx) {
   const itemsPerRow = parseInt(env.ITEMS_PER_ROW) || 4;
   const maxRows = parseInt(env.MAX_ROWS) || 5;
   
+  // ✅ 获取当前日期
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
+  
+  // ✅ 获取农历信息
+  const lunar = Lunar.getLunarDate(now);
+  const solarDate = `${year}年${month}月${day}日 周${weekday}`;
+  const lunarDate = `农历${lunar.monthStr}月${lunar.dayStr} ${lunar.animal}年`;
+  
   let countdowns = getCountdowns();
   if (!showHolidays) countdowns = countdowns.filter(c => c.type !== 'holiday');
   if (!showTerms) countdowns = countdowns.filter(c => c.type !== 'term');
@@ -147,6 +180,7 @@ export default async function(ctx) {
   }
   
   const children = [
+    // ✅ 标题行（带图标）
     {
       type: 'stack',
       direction: 'row',
@@ -171,6 +205,30 @@ export default async function(ctx) {
           textAlign: 'left'
         }
       ]
+    },
+    // ✅ 新增：公历日期行
+    {
+      type: 'text',
+      text: solarDate,
+      font: {
+        size: 12,
+        weight: 'medium'
+      },
+      textColor: { light: '#666666', dark: '#999999' },
+      textAlign: 'left',
+      maxLines: 1
+    },
+    // ✅ 新增：农历日期行
+    {
+      type: 'text',
+      text: lunarDate,
+      font: {
+        size: 11,
+        weight: 'regular'
+      },
+      textColor: { light: '#999999', dark: '#777777' },
+      textAlign: 'left',
+      maxLines: 1
     }
   ];
   
