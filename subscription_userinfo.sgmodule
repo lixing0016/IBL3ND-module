@@ -4,7 +4,7 @@ author: "基于 Egern DSL + 免费黄历API"
 scriptings:
   - generic:
       name: "today-almanac-widget"
-      script_url: "https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js"   # 后面提供这个 JS 内容
+      script_url: "script_url: "https://raw.githubusercontent.com/egerndaddy/quick-start/main/widgets/hello.js"   # 后面提供这个 JS 内容
       timeout: 15
 widgets:
   - name: "今日黄历"
