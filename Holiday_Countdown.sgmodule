@@ -7,7 +7,7 @@ scriptings:
   - generic:
       name: "holiday-countdown"
       # ⚠️ 请替换为你的 GitHub raw 链接
-      script_url: "https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js"
+      script_url: "https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/Holiday_Countdown.js"
       timeout: 15
 
 widgets:
