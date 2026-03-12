@@ -8,4 +8,4 @@ widgets:
     type: medium
     title: 节日倒计时
     refresh-interval: 3600
-    script: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription-userinfo.js_widget.js
+    script: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js
