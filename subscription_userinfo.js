@@ -44,7 +44,7 @@ function thirdSundayOfJune(){
 
 }
 
-async function main(){
+async function main() {
 
   const qingming = daysUntil(4,4)
   const laodong = daysUntil(5,1)
@@ -61,29 +61,18 @@ async function main(){
   const father = thirdSundayOfJune()
   const halloween = daysUntil(10,31)
 
-  const line1 = `清明节 ${qingming}天 | 劳动节 ${laodong}天 | 端午节 ${duanwu}天`
-  const line2 = `春分 ${chunfen}天 | 清明 ${qingming}天 | 谷雨 ${guyu}天`
-  const line3 = `龙抬头 ${longtaitou}天 | 七夕节 ${qixi}天 | 中元节 ${zhongyuan}天`
-  const line4 = `母亲节 ${mother}天 | 父亲节 ${father}天 | 万圣节 ${halloween}天`
-
   const text =
-`📅 节日倒计时
+`清明节${qingming}天 | 劳动节${laodong}天 | 端午节${duanwu}天
+春分${chunfen}天 | 清明${qingming}天 | 谷雨${guyu}天
+龙抬头${longtaitou}天 | 七夕节${qixi}天 | 中元节${zhongyuan}天
+母亲节${mother}天 | 父亲节${father}天 | 万圣节${halloween}天`
 
-${line1}
-${line2}
-${line3}
-${line4}`
-
-  $widget.setTimeline({
-    render: ctx => {
-      return {
-        type: "text",
-        text: text,
-        align: "left"
-      }
-    }
-  })
+  return {
+    type: "text",
+    text: text,
+    align: "left"
+  }
 
 }
 
-main()
+module.exports = { main }
