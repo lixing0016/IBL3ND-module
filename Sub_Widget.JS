@@ -9,23 +9,19 @@
  * 
  *    NAME1 = 翻墙                    # 机场名称（自定义）
  *    URL1 = https://xxx.com/sub...   # 订阅地址（必填）
- *    RESET1 = 1                      # 重置日（可选，每月1日重置）
  * 
  *    NAME2 = 机场B
  *    URL2 = https://yyy.com/sub...
- *    RESET2 = 15                     # 每月15日重置
  * 
- *    ... 最多支持 5 个机场（NAME1-5, URL1-5, RESET1-5）
+ *    ... 最多支持 5 个机场（NAME1-5, URL1-5）
  * 
  * 2️⃣ 参数说明：
  *    - NAME1-5：机场名称，显示在卡片上（必填，否则显示"机场订阅"）
  *    - URL1-5：订阅地址，从机场后台复制（必填）
- *    - RESET1-5：流量重置日，1-28 的数字（可选）
  * 
  * 3️⃣ 示例：
  *    NAME1 = 翻墙
  *    URL1 = https://example.com/sub?token=abc123
- *    RESET1 = 1
  * 
  *    NAME2 = 备用机场
  *    URL2 = https://example2.com/sub?token=def456
