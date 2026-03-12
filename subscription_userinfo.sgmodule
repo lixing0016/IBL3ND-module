@@ -1,11 +1,15 @@
-#!name=节日节气倒计时
-#!desc=节日节气倒计时小组件
-#!author=iBL3ND
-#!version=1.0
-
+name: "今日黄历 - Widget"
+description: "把今日黄历显示在 iOS 主屏/锁屏小组件上"
+author: "基于 Egern DSL + 免费黄历API"
+scriptings:
+  - generic:
+      name: "today-almanac-widget"
+      script_url: "https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js"   # 后面提供这个 JS 内容
+      timeout: 15
 widgets:
-  - id: festival_countdown
-    type: medium
-    title: 节日倒计时
-    refresh-interval: 3600
-    script: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/subscription_userinfo.js
+  - name: "今日黄历"
+    script_name: "today-almanac-widget"
+    env:
+      REFRESH_MIN: "30"          # 可选：刷新间隔分钟（脚本里可读）
+      BG_COLOR_LIGHT: "#FFF8E1"  # 浅色背景（米黄）
+      BG_COLOR_DARK:  "#2D1B0F"  # 深色背景（深咖啡）
