@@ -1,9 +1,7 @@
 /**
- * 📅 节日倒计时小组件 - 修复溢出版
- * 优化布局，避免内容截断
+ * 📅 节日倒计时小组件
  */
 
-/* ========== 🎊 节日数据定义 ========== */
 const HOLIDAYS = {
   '01-01': { name: '元旦', type: 'holiday' },
   '02-14': { name: '情人节', type: 'holiday' },
@@ -22,42 +20,25 @@ const HOLIDAYS = {
 };
 
 const LUNAR_HOLIDAYS = {
-  '1-1': '春节',
-  '1-15': '元宵节',
-  '2-2': '龙抬头',
-  '5-5': '端午节',
-  '7-7': '七夕节',
-  '7-15': '中元节',
-  '8-15': '中秋节',
-  '9-9': '重阳节',
-  '10-1': '寒衣节',
-  '12-8': '腊八节',
-  '12-23': '小年',
-  '12-30': '除夕'
+  '1-1': '春节', '1-15': '元宵节', '2-2': '龙抬头',
+  '5-5': '端午节', '7-7': '七夕节', '7-15': '中元节',
+  '8-15': '中秋节', '9-9': '重阳节', '12-8': '腊八节', '12-30': '除夕'
 };
 
 const SOLAR_TERMS = {
-  '01-05': '小寒', '01-20': '大寒',
-  '02-03': '立春', '02-18': '雨水',
-  '03-05': '惊蛰', '03-20': '春分',
-  '04-04': '清明', '04-19': '谷雨',
-  '05-05': '立夏', '05-20': '小满',
-  '06-05': '芒种', '06-21': '夏至',
-  '07-07': '小暑', '07-22': '大暑',
-  '08-07': '立秋', '08-22': '处暑',
-  '09-07': '白露', '09-22': '秋分',
-  '10-08': '寒露', '10-23': '霜降',
-  '11-07': '立冬', '11-22': '小雪',
-  '12-07': '大雪', '12-21': '冬至'
+  '01-05': '小寒', '01-20': '大寒', '02-03': '立春', '02-18': '雨水',
+  '03-05': '惊蛰', '03-20': '春分', '04-04': '清明', '04-19': '谷雨',
+  '05-05': '立夏', '05-20': '小满', '06-05': '芒种', '06-21': '夏至',
+  '07-07': '小暑', '07-22': '大暑', '08-07': '立秋', '08-22': '处暑',
+  '09-07': '白露', '09-22': '秋分', '10-08': '寒露', '10-23': '霜降',
+  '11-07': '立冬', '11-22': '小雪', '12-07': '大雪', '12-21': '冬至'
 };
 
 const FLOATING_HOLIDAYS = {
   'mother': { name: '母亲节', calc: (y) => getNthWeekday(y, 5, 0, 2) },
   'father': { name: '父亲节', calc: (y) => getNthWeekday(y, 6, 0, 3) },
-  'halloween': { name: '万圣节', calc: (y) => new Date(y, 9, 31) },
 };
 
-/* ========== 🌙 农历计算 ========== */
 const Lunar = (function() {
   const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0];
   
@@ -84,11 +65,9 @@ const Lunar = (function() {
     }
     return { year: y, month: m, day: d };
   }
-  
   return { getLunarDate };
 })();
 
-/* ========== 🔧 工具函数 ========== */
 function getNthWeekday(year, month, weekday, n) {
   const firstDay = new Date(year, month - 1, 1);
   const firstWeekday = firstDay.getDay();
@@ -101,157 +80,97 @@ function daysDiff(from, to) {
   return Math.ceil((to - from) / oneDay);
 }
 
-/* ========== 📊 获取所有倒计时 ========== */
 function getCountdowns() {
   const now = new Date();
   const currentYear = now.getFullYear();
   const results = [];
   
-  // 1. 公历节日
   for (const [key, info] of Object.entries(HOLIDAYS)) {
     const [m, d] = key.split('-').map(Number);
     let targetDate = new Date(currentYear, m - 1, d);
     if (targetDate < now) targetDate = new Date(currentYear + 1, m - 1, d);
-    const days = daysDiff(now, targetDate);
-    results.push({ name: info.name, days, type: info.type });
+    results.push({ name: info.name, days: daysDiff(now, targetDate), type: info.type });
   }
   
-  // 2. 浮动节日
   for (const [key, info] of Object.entries(FLOATING_HOLIDAYS)) {
     let targetDate = info.calc(currentYear);
     if (targetDate < now) targetDate = info.calc(currentYear + 1);
-    const days = daysDiff(now, targetDate);
-    results.push({ name: info.name, days, type: 'floating' });
+    results.push({ name: info.name, days: daysDiff(now, targetDate), type: 'floating' });
   }
   
-  // 3. 节气
   for (const [key, name] of Object.entries(SOLAR_TERMS)) {
     const [m, d] = key.split('-').map(Number);
     let targetDate = new Date(currentYear, m - 1, d);
     if (targetDate < now) targetDate = new Date(currentYear + 1, m - 1, d);
-    const days = daysDiff(now, targetDate);
-    results.push({ name, days, type: 'term' });
+    results.push({ name, days: daysDiff(now, targetDate), type: 'term' });
   }
   
-  // 4. 农历节日
   const lunar = Lunar.getLunarDate(now);
   for (const [key, name] of Object.entries(LUNAR_HOLIDAYS)) {
     const [lm, ld] = key.split('-').map(Number);
     let targetMonth = lm;
-    let targetDay = ld;
-    if (targetMonth < lunar.month || (targetMonth === lunar.month && targetDay <= lunar.day)) {
+    if (targetMonth < lunar.month || (targetMonth === lunar.month && ld <= lunar.day)) {
       targetMonth = (targetMonth % 12) + 1;
     }
-    let targetDate = new Date(currentYear, targetMonth - 1, targetDay);
-    if (targetDate < now) targetDate = new Date(currentYear + 1, targetMonth - 1, targetDay);
-    const days = daysDiff(now, targetDate);
-    results.push({ name, days, type: 'lunar' });
+    let targetDate = new Date(currentYear, targetMonth - 1, ld);
+    if (targetDate < now) targetDate = new Date(currentYear + 1, targetMonth - 1, ld);
+    results.push({ name, days: daysDiff(now, targetDate), type: 'lunar' });
   }
   
-  // 按天数排序
   results.sort((a, b) => a.days - b.days);
-  
-  // 去重：同一天只保留一个
   const seen = new Set();
-  const unique = results.filter(r => {
-    if (seen.has(r.days)) return false;
-    seen.add(r.days);
-    return true;
-  });
-  
-  return unique;
+  return results.filter(r => { if (seen.has(r.days)) return false; seen.add(r.days); return true; });
 }
 
-/* ========== 🎨 DSL 组件 ========== */
 function t(text, opts = {}) {
-  const sizes = { title: 20, headline: 18, body: 14, caption: 12, tiny: 10 };
+  const sizes = { title: 18, headline: 16, body: 13, caption: 11 };
   return {
     type: 'text',
     text,
-    font: { size: sizes[opts.size] || 14, weight: opts.weight || 'regular' },
+    font: { size: sizes[opts.size] || 13, weight: opts.weight || 'regular' },
     textColor: opts.color || { light: '#1D1D1F', dark: '#F5F5F7' },
-    textAlign: opts.align || 'left',
-    maxLines: opts.maxLines || 1,  // ✅ 限制每行最多1行，避免溢出
-    lineBreakMode: 'tail'  // ✅ 超出部分用省略号
+    textAlign: 'left',
+    maxLines: 1
   };
 }
 
 function stack(children, opts = {}) {
-  return {
-    type: 'stack',
-    direction: opts.direction || 'row',
-    alignItems: opts.align || 'center',
-    gap: opts.gap || 8,
-    children: children.filter(Boolean)
-  };
+  return { type: 'stack', direction: opts.direction || 'row', alignItems: opts.align || 'center', gap: opts.gap || 6, children: children.filter(Boolean) };
 }
 
 function img(src, opts = {}) {
-  const s = opts.size || 24;
-  return {
-    type: 'image',
-    src: src.startsWith('sf:') ? src.replace('sf:', 'sf-symbol:') : `sf-symbol:${src}`,
-    width: s, height: s,
-    color: opts.color || { light: '#007AFF', dark: '#0A84FF' }
-  };
+  return { type: 'image', src: src.startsWith('sf:') ? src.replace('sf:', 'sf-symbol:') : `sf-symbol:${src}`, width: opts.size||20, height: opts.size||20, color: opts.color || { light: '#FF3B30', dark: '#FF453A' } };
 }
 
-/* ========== 🧩 主入口 ========== */
 export default async function(ctx) {
   const env = ctx.env || {};
-  const title = env.TITLE || '📅 节日倒计时';
+  const title = env.TITLE || '节日倒计时';
   const showHolidays = env.SHOW_HOLIDAYS !== 'false';
   const showTerms = env.SHOW_TERMS !== 'false';
   const showTraditional = env.SHOW_TRADITIONAL !== 'false';
-  const itemsPerRow = parseInt(env.ITEMS_PER_ROW) || 3;  // ✅ 改回3个
-  const maxRows = parseInt(env.MAX_ROWS) || 6;          // ✅ 增加行数
   
-  const countdowns = getCountdowns();
+  // ✅ 强制每行3个，最多5行
+  const itemsPerRow = 3;
+  const maxRows = 5;
   
-  // 过滤类型
-  let filtered = countdowns;
-  if (!showHolidays) filtered = filtered.filter(c => c.type !== 'holiday');
-  if (!showTerms) filtered = filtered.filter(c => c.type !== 'term');
-  if (!showTraditional) filtered = filtered.filter(c => c.type !== 'lunar' && c.type !== 'floating');
+  let countdowns = getCountdowns();
+  if (!showHolidays) countdowns = countdowns.filter(c => c.type !== 'holiday');
+  if (!showTerms) countdowns = countdowns.filter(c => c.type !== 'term');
+  if (!showTraditional) countdowns = countdowns.filter(c => c.type !== 'lunar' && c.type !== 'floating');
   
-  // 取前 N 个
-  const totalItems = itemsPerRow * maxRows;
-  const displayItems = filtered.slice(0, totalItems);
-  
-  // 分组为行
+  const displayItems = countdowns.slice(0, itemsPerRow * maxRows);
   const rows = [];
   for (let i = 0; i < displayItems.length; i += itemsPerRow) {
     const rowItems = displayItems.slice(i, i + itemsPerRow);
-    // ✅ 使用更简洁的格式：去掉"天"字，用空格分隔
-    const rowText = rowItems.map(c => `${c.name}·${c.days}天`).join('  ');
-    rows.push(rowText);
+    rows.push(rowItems.map(c => `${c.name}${c.days}天`).join(' | '));
   }
   
-  // 构建子元素数组
   const children = [
-    // 标题行（带图标）
-    stack([
-      img('calendar', { size: 24, color: { light: '#FF3B30', dark: '#FF453A' } }),
-      t(title.replace(/^[^\s]+\s*/, ''), { size: 'headline', weight: 'bold' })
-    ], { direction: 'row', gap: 8, align: 'center' })
+    stack([img('calendar'), t(title, { size: 'headline', weight: 'bold' })], { gap: 8 })
   ];
   
-  // 添加每一行
-  rows.forEach((row, index) => {
-    children.push(
-      t(row, { 
-        size: 'body', 
-        color: { light: '#333333', dark: '#CCCCCC' },
-        weight: index === 0 ? 'semibold' : 'regular'
-      })
-    );
-  });
+  rows.forEach((row, i) => children.push(t(row, { size: 'body', weight: i===0?'semibold':'regular', color: { light:'#333', dark:'#CCC' } })));
   
-  return {
-    type: 'widget',
-    backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
-    padding: 12,
-    children: children
-  };
+  return { type: 'widget', backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' }, padding: 12, children };
 }
 
