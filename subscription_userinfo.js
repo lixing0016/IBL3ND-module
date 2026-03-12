@@ -1,6 +1,6 @@
 /**
- * 📅 节日倒计时小组件 - 最终优化版
- * 充分利用空间，减少右侧空白
+ * 📅 节日倒计时小组件 - 修复溢出版
+ * 优化布局，避免内容截断
  */
 
 /* ========== 🎊 节日数据定义 ========== */
@@ -164,14 +164,15 @@ function getCountdowns() {
 
 /* ========== 🎨 DSL 组件 ========== */
 function t(text, opts = {}) {
-  const sizes = { title: 20, headline: 18, body: 15, caption: 12, tiny: 10 };
+  const sizes = { title: 20, headline: 18, body: 14, caption: 12, tiny: 10 };
   return {
     type: 'text',
     text,
     font: { size: sizes[opts.size] || 14, weight: opts.weight || 'regular' },
     textColor: opts.color || { light: '#1D1D1F', dark: '#F5F5F7' },
     textAlign: opts.align || 'left',
-    maxLines: opts.maxLines || 2
+    maxLines: opts.maxLines || 1,  // ✅ 限制每行最多1行，避免溢出
+    lineBreakMode: 'tail'  // ✅ 超出部分用省略号
   };
 }
 
@@ -202,8 +203,8 @@ export default async function(ctx) {
   const showHolidays = env.SHOW_HOLIDAYS !== 'false';
   const showTerms = env.SHOW_TERMS !== 'false';
   const showTraditional = env.SHOW_TRADITIONAL !== 'false';
-  const itemsPerRow = parseInt(env.ITEMS_PER_ROW) || 4;  // ✅ 改为每行4个
-  const maxRows = parseInt(env.MAX_ROWS) || 5;          // ✅ 减少行数
+  const itemsPerRow = parseInt(env.ITEMS_PER_ROW) || 3;  // ✅ 改回3个
+  const maxRows = parseInt(env.MAX_ROWS) || 6;          // ✅ 增加行数
   
   const countdowns = getCountdowns();
   
@@ -221,7 +222,8 @@ export default async function(ctx) {
   const rows = [];
   for (let i = 0; i < displayItems.length; i += itemsPerRow) {
     const rowItems = displayItems.slice(i, i + itemsPerRow);
-    const rowText = rowItems.map(c => `${c.name}${c.days}天`).join('  |  ');  // ✅ 增加分隔符空格
+    // ✅ 使用更简洁的格式：去掉"天"字，用空格分隔
+    const rowText = rowItems.map(c => `${c.name}·${c.days}天`).join('  ');
     rows.push(rowText);
   }
   
@@ -229,9 +231,9 @@ export default async function(ctx) {
   const children = [
     // 标题行（带图标）
     stack([
-      img('calendar', { size: 28, color: { light: '#FF3B30', dark: '#FF453A' } }),
+      img('calendar', { size: 24, color: { light: '#FF3B30', dark: '#FF453A' } }),
       t(title.replace(/^[^\s]+\s*/, ''), { size: 'headline', weight: 'bold' })
-    ], { direction: 'row', gap: 10, align: 'center' })
+    ], { direction: 'row', gap: 8, align: 'center' })
   ];
   
   // 添加每一行
@@ -248,7 +250,7 @@ export default async function(ctx) {
   return {
     type: 'widget',
     backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
-    padding: 12,  // ✅ 减少padding
+    padding: 12,
     children: children
   };
 }
