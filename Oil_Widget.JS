@@ -1,8 +1,7 @@
 /**
- * ⛽ 油价实时查询小组件（完美对齐版）
- * 脚本作者 Egern群友 tg://user?id=5122789128
- * 由iBL3ND二次修改
- * 
+ * ⛽ 油价实时查询小组件
+ * 脚本作者 Egern 群友 tg://user?id=5122789128
+ * 由Egern二次修改
  * 📚 使用教程
  * ═══════════════════════════════════════════════════
  *
@@ -11,7 +10,7 @@
  * 在 Egern 小组件配置中添加以下环境变量：
  *
  * 名称：城市
- * 值：海南（或其他省份名）
+ * 值：湖北（或 湖北省，或其他省份名）
  *
  * 名称：SHOW_DIESEL
  * 值：true（显示柴油）或 false（不显示柴油）
@@ -27,8 +26,6 @@
  * • 辽宁、陕西、海南、山西、吉林、黑龙江
  * • 云南、贵州、广西、甘肃、青海、宁夏
  * • 新疆、西藏、内蒙古
- *
- * 注意：必须填写省份名，不能填写城市名！
  *
  * ═══════════════════════════════════════════════════
  */
@@ -56,7 +53,7 @@ export default async function (ctx) {
  };
 
  const CACHE_KEY = `autohome_oil_${city}`;
- let prices = {p92:null,p95:null,p98:null,diesel:null};
+ let prices = {p92:null, p95:null, p98:null, diesel:null};
  let lastUpdate = null;
  let hasCache = false;
  
@@ -79,28 +76,42 @@ export default async function (ctx) {
   });
   const html = await resp.text();
 
-  let match = null;
-  const regex1 = new RegExp(
-   city + "[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)"
-  );
-  match = html.match(regex1);
+  // 🔧 新匹配逻辑：直接找省份位置，取后面 4 个价格
+  const cityVariants = [
+   city,
+   city.replace("省", ""),
+   city + "省",
+  ];
 
-  if (!match) {
-   const regex2 = new RegExp(
-    city.replace(/\s+/g, "\\s*") + "[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)[\s\S]*?(\d+\\.\\d+)"
-   );
-   match = html.match(regex2);
+  let matchSuccess = false;
+
+  for (const variant of cityVariants) {
+   if (matchSuccess) break;
+   
+   const cityIndex = html.indexOf(variant);
+   if (cityIndex >= 0) {
+    // 获取省份后面的内容（1000 字符内）
+    const content = html.substring(cityIndex, cityIndex + 1000);
+    
+    // 提取所有价格数字
+    const numbers = content.match(/\d+\.\d+/g) || [];
+    
+    if (numbers.length >= 4) {
+     prices.p92 = parseFloat(numbers[0]);
+     prices.p95 = parseFloat(numbers[1]);
+     prices.p98 = parseFloat(numbers[2]);
+     prices.diesel = SHOW_DIESEL ? parseFloat(numbers[3]) : null;
+     lastUpdate = new Date().toISOString();
+     ctx.storage.setJSON(CACHE_KEY, { prices, lastUpdate });
+     matchSuccess = true;
+     fetchError = false;
+     console.log(`✅ 匹配成功：${variant}`);
+    }
+   }
   }
 
-  if (match) {
-   prices.p92 = parseFloat(match[1]);
-   prices.p95 = parseFloat(match[2]);
-   prices.p98 = parseFloat(match[3]);
-   prices.diesel = SHOW_DIESEL ? parseFloat(match[4]) : null;
-   lastUpdate = new Date().toISOString();
-   ctx.storage.setJSON(CACHE_KEY, { prices, lastUpdate });
-   fetchError = false;
-  } else {
+  if (!matchSuccess) {
+   console.log(`❌ 未匹配到油价数据：${city}`);
    if (!hasCache) {
     fetchError = true;
     errorMsg = "未找到油价数据，请检查省份名";
@@ -108,6 +119,7 @@ export default async function (ctx) {
   }
 
  } catch (e) {
+  console.log("❌ 网络请求失败:", e.message);
   if (!hasCache) {
    fetchError = true;
    errorMsg = e.message || "网络请求失败";
@@ -127,7 +139,7 @@ export default async function (ctx) {
    direction:"column",
    alignItems:"center",
    justifyContent:"center",
-   flex:1,  // ✅ 关键：使用 flex 布局，自动等分宽度
+   flex:1,
    padding:[8,4,8,4],
    backgroundColor: COLORS.card,
    borderRadius:12,
@@ -200,8 +212,8 @@ export default async function (ctx) {
     type:"stack",
     direction:"row",
     alignItems:"center",
-    justifyContent:"space-between",  // ✅ 配合 flex:1 实现完美对齐
-    gap:6,  // ✅ 卡片之间的间距
+    justifyContent:"space-between",
+    gap:6,
     padding:[6,0,6,0],
     children: rows.map(priceCard)
    } : {
