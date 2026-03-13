@@ -1,18 +1,18 @@
-// 招商实时金价 - Egern 小组件
+// 招商实时金价 - Egern 小组件 (深色模式适配版)
 export default async function(ctx) {
   const API_URL = "https://mbmodule-openapi.paas.cmbchina.com/product/v1/func/market-center";
-  const isDark = ctx.app?.appearance === "dark";
   const widgetFamily = ctx.widgetFamily || "systemMedium";
 
+  // 🎨 颜色配置：使用 { light, dark } 格式，由 Egern 自动切换
   const theme = {
-    bg: isDark ? "#1C1C1E" : "#FFFFFF",
-    card: isDark ? "#2C2C2E" : "#F5F5F7",
-    title: isDark ? "#FFFFFF" : "#000000",
-    label: isDark ? "#AAAAAA" : "#666666",
-    price: isDark ? "#FFFFFF" : "#000000",
-    up: isDark ? "#30D158" : "#00AA00",
-    down: isDark ? "#FF453A" : "#FF0000",
-    time: isDark ? "#888888" : "#999999"
+    bg: { light: "#FFFFFF", dark: "#1C1C1E" },
+    card: { light: "#F5F5F7", dark: "#2C2C2E" },
+    title: { light: "#000000", dark: "#FFFFFF" },
+    label: { light: "#666666", dark: "#AAAAAA" },
+    price: { light: "#000000", dark: "#FFFFFF" },
+    up: { light: "#00AA00", dark: "#30D158" },
+    down: { light: "#FF0000", dark: "#FF453A" },
+    time: { light: "#999999", dark: "#888888" }
   };
 
   let data = null;
@@ -48,7 +48,7 @@ export default async function(ctx) {
   const buy = gold.zBuyPrc || "--";
   const sell = gold.zSelPrc || "--";
   const change = gold.zDvlCur || "--";
-  
+
   // 获取当前时间
   const now = new Date();
   const year = now.getFullYear();
@@ -57,10 +57,10 @@ export default async function(ctx) {
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const dateTimeStr = `${year}/${month}/${day} ${hours}:${minutes}`;
-  
+
   const isUp = change.startsWith("+");
 
-  // 小尺寸布局
+  // 🔹 小尺寸布局
   if (widgetFamily === "systemSmall") {
     return {
       type: "widget",
@@ -105,7 +105,7 @@ export default async function(ctx) {
     };
   }
 
-  // 中尺寸布局（优化：标题与涨跌分行，确保涨跌在最右带图标）
+  // 🔹 中尺寸布局
   return {
     type: "widget",
     padding: [12, 12, 12, 12],
@@ -116,11 +116,10 @@ export default async function(ctx) {
     children: [
       {
         type: "stack",
-        direction: "column", // 改为垂直布局
+        direction: "column",
         gap: 4,
         children: [
           {
-            // 第一行：标题在最左，涨跌幅在最右（带图标）
             type: "stack",
             direction: "row",
             alignItems: "center",
@@ -131,7 +130,6 @@ export default async function(ctx) {
             ]
           },
           {
-            // 第二行：显示时间
             type: "text",
             text: dateTimeStr,
             font: { size: "caption2" },
@@ -139,7 +137,6 @@ export default async function(ctx) {
           }
         ]
       },
-      
       {
         type: "stack",
         direction: "row",
