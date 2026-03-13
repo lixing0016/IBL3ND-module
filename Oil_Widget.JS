@@ -2,12 +2,13 @@
  * ⛽ 全国实时油价小组件
  * 数据源：http://m.qiyoujiage.com/
  * 脚本作者：Egern 群友 tg://user?id=5122789128
- * 由iBL3ND二次修改
+ * 由 iBL3ND 二次修改
+ * 
  * 🔧 功能特性：
  * - 支持全国所有省份和城市
  * - 标题自动显示当前地区
+ * - 调价信息右上角显示
  * - 实时显示 92/95/98 号汽油和柴油价格
- * - 显示下次调价预测信息
  * - 深色模式自动适配
  * - 全 iPhone 机型适配
  * 
@@ -28,10 +29,8 @@
  * 2️⃣ 地区代码对照表
  * ─────────────────────────────────────────────────
  * 【直辖市】
- * • 北京：beijing
- * • 上海：shanghai
- * • 天津：tianjin
- * • 重庆：chongqing
+ * • 北京：beijing  • 上海：shanghai
+ * • 天津：tianjin  • 重庆：chongqing
  *
  * 【省份 - 省会城市】
  * • 广东：guangdong/guangzhou
@@ -72,10 +71,7 @@ export default async function (ctx) {
 
  // 🔧 拼音转中文映射表
  const PINYIN_MAP = {
-  // 直辖市
   "beijing": "北京", "shanghai": "上海", "tianjin": "天津", "chongqing": "重庆",
-  
-  // 省份
   "guangdong": "广东", "jiangsu": "江苏", "zhejiang": "浙江", "shandong": "山东",
   "henan": "河南", "hebei": "河北", "sichuan": "四川", "hubei": "湖北",
   "hunan": "湖南", "anhui": "安徽", "fujian": "福建", "jiangxi": "江西",
@@ -84,8 +80,6 @@ export default async function (ctx) {
   "guangxi": "广西", "gansu": "甘肃", "qinghai": "青海",
   "ningxia": "宁夏", "xinjiang": "新疆", "xizang": "西藏",
   "neimenggu": "内蒙古",
-  
-  // 城市
   "guangzhou": "广州", "nanjing": "南京", "hangzhou": "杭州", "jinan": "济南",
   "zhengzhou": "郑州", "shijiazhuang": "石家庄", "chengdu": "成都", "wuhan": "武汉",
   "changsha": "长沙", "hefei": "合肥", "fuzhou": "福州", "nanchang": "南昌",
@@ -94,42 +88,46 @@ export default async function (ctx) {
   "nanning": "南宁", "lanzhou": "兰州", "xining": "西宁",
   "yinchuan": "银川", "wulumuqi": "乌鲁木齐", "lasa": "拉萨",
   "huhehaote": "呼和浩特", "xian": "西安", "taiyuan": "太原",
-  
-  // 特殊省份
   "shanxi-1": "山西", "shanxi-3": "陕西",
  };
 
  // 🔧 解析地区名称
  const getRegionName = (region) => {
   if (!region) return "";
-  
   const parts = region.split('/');
   let cityName = "";
   
   if (parts.length >= 2) {
-   // 有城市：省份/城市
    const provincePinyin = parts[0];
    const cityPinyin = parts[1];
-   
    const provinceName = PINYIN_MAP[provincePinyin] || "";
    const cityNameFromMap = PINYIN_MAP[cityPinyin] || cityPinyin;
    
-   // 直辖市直接显示城市名
    if (["beijing", "shanghai", "tianjin", "chongqing"].includes(provincePinyin)) {
     cityName = cityNameFromMap || provinceName;
    } else {
     cityName = cityNameFromMap;
    }
   } else {
-   // 仅省份
    cityName = PINYIN_MAP[region] || region;
   }
-  
   return cityName;
  };
 
  const regionName = getRegionName(regionParam);
  const titleText = regionName ? `${regionName}实时油价` : "实时油价";
+
+ // 🔧 解析调价趋势文本（提前解析，用于右上角显示）
+ let trendDisplay = "";
+ if (SHOW_TREND) {
+  // 尝试从缓存读取趋势
+  try {
+   const cached = ctx.storage.getJSON(`qiyoujiage_oil_${regionParam}`);
+   if (cached?.trendInfo) {
+    trendDisplay = cached.trendInfo;
+   }
+  } catch(_) {}
+ }
 
  const now = new Date();
  const timeStr = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
@@ -147,11 +145,12 @@ export default async function (ctx) {
   p95: { light: "#FF6B35", dark: "#FF8A5C" },
   p98: { light: "#FF3B30", dark: "#FF6B6B" },
   diesel: { light: "#30D158", dark: "#5CD67D" },
+  trend: { light: "#007AFF", dark: "#0A84FF" },  // 🔹 调价信息蓝色
  };
 
  const CACHE_KEY = `qiyoujiage_oil_${regionParam}`;
  let prices = {p92:null, p95:null, p98:null, diesel:null};
- let trendInfo = "";
+ let trendInfo = trendDisplay;
  let hasCache = false;
  
  try {
@@ -178,12 +177,12 @@ export default async function (ctx) {
   });
   
   if (resp.status !== 200) {
-   throw new Error(`HTTP ${resp.status}: 页面不存在，请检查地区代码`);
+   throw new Error(`HTTP ${resp.status}: 页面不存在`);
   }
   
   const html = await resp.text();
 
-  // 解析油价 - 方法1：原正则
+  // 解析油价 - 方法1
   const regPrice = /<dl>[\s\S]+?<dt>(.*油)<\/dt>[\s\S]+?<dd>(.*)\(元\)<\/dd>/gm;
   const priceList1 = [];
   let m = null;
@@ -193,7 +192,7 @@ export default async function (ctx) {
    priceList1.push({ name: m[1].trim(), value: m[2].trim() });
   }
 
-  // 解析油价 - 方法2：宽松匹配
+  // 解析油价 - 方法2
   const dlBlocks = html.match(/<dl>[\s\S]+?<\/dl>/gi) || [];
   const priceList2 = [];
   
@@ -233,7 +232,7 @@ export default async function (ctx) {
     }
    });
 
-   // 解析调价趋势
+   // 🔧 解析调价趋势（用于右上角显示）
    if (SHOW_TREND) {
     const regTrend = /<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/;
     const trendMatch = html.match(regTrend);
@@ -247,16 +246,17 @@ export default async function (ctx) {
      const amount = amountMatch ? `${amountMatch[1]}-${amountMatch[2]}元` : 
                     (valuePart.match(/[\d\.]+元\/吨/)?.[0] || "");
      
-     trendInfo = `${datePart} ${trend}${amount ? ` ${amount}` : ""}`;
+     // 🔹 简洁格式，适合右上角显示
+     trendInfo = `${datePart}${trend}${amount ? ` ${amount}` : ""}`;
+     ctx.storage.setJSON(CACHE_KEY, { prices, trendInfo });
     }
    }
 
-   ctx.storage.setJSON(CACHE_KEY, { prices, trendInfo });
    fetchError = false;
   } else {
    if (!hasCache) {
     fetchError = true;
-    errorMsg = `解析失败：找到 ${priceList.length} 个价格`;
+    errorMsg = `解析失败：${priceList.length} 个价格`;
    }
   }
 
@@ -332,6 +332,7 @@ export default async function (ctx) {
   backgroundColor: backgroundColor,
   refreshAfter:refreshTime,
   children:[
+   // 🔹 标题栏 + 右上角调价信息
    {
     type:"stack",
     direction:"row",
@@ -342,18 +343,22 @@ export default async function (ctx) {
      {type:"image",src:"sf-symbol:fuelpump.fill",width:13,height:13,color:COLORS.p92},
      {type:"text",text:titleText,font:{size:"caption2",weight:"semibold"},textColor:COLORS.secondary},
      {type:"spacer"},
-     fetchError
-      ? {type:"text",text:errorMsg,font:{size:"caption2"},textColor:COLORS.p98}
-      : null
+     // 🔹 右上角调价信息（蓝色小字）
+     ...(SHOW_TREND && trendInfo ? [{
+      type:"text",
+      text:`📊 ${trendInfo}`,
+      font:{size:"caption2"},
+      textColor: COLORS.trend,
+      textAlign:"right",
+      lineLimit:1
+     }] : []),
+     // 🔹 错误信息
+     ...(fetchError ? [{
+      type:"text",text:errorMsg,font:{size:"caption2"},textColor:COLORS.p98
+     }] : [])
     ].filter(Boolean)
    },
-   ...(SHOW_TREND && trendInfo ? [{
-    type:"text",
-    text:`📊 ${trendInfo}`,
-    font:{size:"caption2"},
-    textColor: COLORS.tertiary,
-    textAlign:"center"
-   }] : []),
+   // 🔹 价格卡片
    rows.length > 0 ? {
     type:"stack",
     direction:"row",
@@ -373,6 +378,7 @@ export default async function (ctx) {
      {type:"text",text:fetchError?"数据获取失败":"暂无数据",font:{size:"body"},textColor:COLORS.secondary}
     ]
    },
+   // 🔹 底部更新时间
    {
     type:"stack",
     direction:"row",
