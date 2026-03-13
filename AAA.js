@@ -1,267 +1,320 @@
 /**
- * Egern 黄历小组件 - 深浅模式完美适配版
- * 基于 jnlaoshu/Almanac.js 农历核心 + Holiday_Countdown.js 成功模式
+ * 📅 节日倒计时小组件➕农历显示
+ * ✅ 已适配所有 widgetFamily 尺寸
+ * ✅ 添加错误降级处理
+ * ✅ 添加 refreshAfter 刷新控制
  */
 
-// ===== 农历核心数据（1900-2100）=====
-const LUNAR_INFO = [
-  0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
-  0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
-  0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
-  0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
-  0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
-  0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
-  0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
-  0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
-  0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
-  0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
-  0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
-  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
-  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
-  0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
-  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
-  0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
-  0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
-  0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
-  0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
-  0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,
-  0x0d520
-];
+// ========== 节日数据配置 ==========
+const HOLIDAYS = {
+  '01-01': { name: '元旦', type: 'holiday' },
+  '02-14': { name: '情人节', type: 'holiday' },
+  '03-08': { name: '妇女节', type: 'holiday' },
+  '04-01': { name: '愚人节', type: 'holiday' },
+  '05-01': { name: '劳动节', type: 'holiday' },
+  '05-04': { name: '青年节', type: 'holiday' },
+  '06-01': { name: '儿童节', type: 'holiday' },
+  '07-01': { name: '建党节', type: 'holiday' },
+  '08-01': { name: '建军节', type: 'holiday' },
+  '09-10': { name: '教师节', type: 'holiday' },
+  '10-01': { name: '国庆节', type: 'holiday' },
+  '11-11': { name: '光棍节', type: 'holiday' },
+  '12-25': { name: '圣诞节', type: 'holiday' },
+  '12-31': { name: '跨年夜', type: 'holiday' },
+};
 
-const GAN = "甲乙丙丁戊己庚辛壬癸";
-const ZHI = "子丑寅卯辰巳午未申酉戌亥";
-const ANI = "鼠牛虎兔龙蛇马羊猴鸡狗猪";
-const N_STR = ["","一","二","三","四","五","六","七","八","九","十"];
-const MON_STR = ["正","二","三","四","五","六","七","八","九","十","冬","腊"];
-const WEEK = ["日","一","二","三","四","五","六"];
-const YI_POOL = ["祭祀","祈福","嫁娶","出行","动土","安床","开市","交易","纳财","入宅","移徙"];
-const JI_POOL = ["安葬","破土","词讼","掘井","栽种","探病","余事勿取","伐木","作梁"];
+const LUNAR_HOLIDAYS = {
+  '1-1': '春节', '1-15': '元宵节', '2-2': '龙抬头',
+  '5-5': '端午节', '7-7': '七夕节', '7-15': '中元节',
+  '8-15': '中秋节', '9-9': '重阳节', '12-8': '腊八节', '12-30': '除夕'
+};
 
-// ===== 工具函数 =====
-function hashDate(y, m, d) { return ((y*10000 + m*100 + d) * 31 + 7) % 1000; }
+const SOLAR_TERMS = {
+  '01-05': '小寒', '01-20': '大寒', '02-03': '立春', '02-18': '雨水',
+  '03-05': '惊蛰', '03-20': '春分', '04-04': '清明', '04-19': '谷雨',
+  '05-05': '立夏', '05-20': '小满', '06-05': '芒种', '06-21': '夏至',
+  '07-07': '小暑', '07-22': '大暑', '08-07': '立秋', '08-22': '处暑',
+  '09-07': '白露', '09-22': '秋分', '10-08': '寒露', '10-23': '霜降',
+  '11-07': '立冬', '11-22': '小雪', '12-07': '大雪', '12-21': '冬至'
+};
 
-function getLunar(y, m, d) {
-  let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
-  let i, temp;
-  for (i = 1900; i < 2101 && offset > 0; i++) {
-    temp = 348;
-    for (let j = 0x8000; j > 0x8; j >>= 1) if (LUNAR_INFO[i-1900] & j) temp += 1;
-    const leap = LUNAR_INFO[i-1900] & 0xf;
-    if (leap) temp += (LUNAR_INFO[i-1900] & 0x10000) ? 30 : 29;
-    offset -= temp;
+const FLOATING_HOLIDAYS = {
+  'mother': { name: '母亲节', calc: (y) => getNthWeekday(y, 5, 0, 2) },
+  'father': { name: '父亲节', calc: (y) => getNthWeekday(y, 6, 0, 3) },
+};
+
+// ========== 农历计算引擎（1900-2100） ==========
+const Lunar = (function() {
+  const lunarInfo = [
+    0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
+    0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
+    0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
+    0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
+    0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,
+    0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
+    0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,
+    0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
+    0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,
+    0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
+    0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+    0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
+    0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
+    0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
+    0x14aa6, 0x02b60, 0x09570, 0x04976, 0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54,
+    0x02b60, 0x09570, 0x052f2, 0x04970, 0x06566, 0x0d4a0, 0x0ea50, 0x16ea5, 0x05ad0, 0x02b60,
+    0x186e3, 0x092e0, 0x1c8d7, 0x0c950, 0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0,
+    0x092d0, 0x0d2b2, 0x0a950, 0x0b557, 0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5d0, 0x145ad,
+    0x052b0, 0x0a9a8, 0x0e950, 0x06aa0, 0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260,
+    0x0f263, 0x0d950, 0x05b57, 0x056a0, 0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250
+  ];
+
+  const Gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+  const Zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+  const Animals = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+  const lunarMonths = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+
+  function lYearDays(y) {
+    let i, sum = 348;
+    for (i = 0x8000; i > 0x8; i >>= 1) sum += (lunarInfo[y - 1900] & i) ? 1 : 0;
+    return sum + leapDays(y);
   }
-  if (offset < 0) { offset += temp; i--; }
-  const lYear = i, leap = LUNAR_INFO[lYear-1900] & 0xf;
-  let isLeap = false, lMonth = 1;
-  for (i = 1; i < 13 && offset > 0; i++) {
-    if (leap > 0 && i === leap+1 && !isLeap) { i--; isLeap = true; temp = (LUNAR_INFO[lYear-1900] & 0x10000) ? 30 : 29; }
-    else temp = (LUNAR_INFO[lYear-1900] & (0x10000 >> i)) ? 30 : 29;
-    if (isLeap && i === leap+1) isLeap = false;
-    offset -= temp;
-  }
-  if (offset < 0) { offset += temp; i--; }
-  const lDay = Math.floor(offset) + 1;
-  let dayStr;
-  if (lDay === 10) dayStr = "初十";
-  else if (lDay === 20) dayStr = "二十";
-  else if (lDay === 30) dayStr = "三十";
-  else {
-    const p = ["初","十","廿","卅"][Math.floor(lDay/10)];
-    dayStr = p + N_STR[lDay % 10];
-  }
-  return {
-    gz: GAN[(lYear-4)%10] + ZHI[(lYear-4)%12],
-    ani: ANI[(lYear-4)%12],
-    cn: (isLeap?"闰":"") + MON_STR[i-1] + "月" + dayStr
-  };
-}
 
-function getLocalYiJi(y, m, d) {
-  const h = hashDate(y, m, d);
-  return {
-    yi: YI_POOL.slice(0, 3 + h%4),
-    ji: JI_POOL.slice(0, 2 + (h+5)%4)
-  };
-}
+  function leapDays(y) {
+    if (leapMonth(y)) return (lunarInfo[y - 1900] & 0x10000) ? 30 : 29;
+    return 0;
+  }
 
-// ===== 主入口 =====
-export default async function(ctx) {
-  // 1. 环境变量
-  const env = ctx.env || {};
-  const showLunar = env.SHOW_LUNAR !== 'false';
-  const showYiJi = env.SHOW_YIJI !== 'false';
-  
-  // 2. 时间计算
-  const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
-  const [Y, M, D] = [now.getFullYear(), now.getMonth()+1, now.getDate()];
-  const W = WEEK[now.getDay()];
-  
-  // 3. 获取数据
-  const lunar = getLunar(Y, M, D);
-  const yiji = getLocalYiJi(Y, M, D);
-  const hash = hashDate(Y, M, D);
-  
-  // 4. 尺寸适配
-  const family = ctx.widgetFamily || "systemMedium";
-  const isSmall = family === "systemSmall" || family === "accessoryCircular";
-  const isMedium = family === "systemMedium" || family === "accessoryRectangular";
-  const isLarge = family === "systemLarge" || family === "systemExtraLarge";
-  
-  // 5. 字体大小配置
-  const F = {
-    title: isSmall ? 16 : (isMedium ? 18 : 22),
-    date: isSmall ? 13 : (isMedium ? 15 : 18),
-    body: isSmall ? 11 : (isMedium ? 13 : 15),
-    tiny: isSmall ? 10 : (isMedium ? 11 : 13)
-  };
-  
-  // 6. Padding 和 Gap
-  const padding = isSmall ? 14 : (isMedium ? 16 : 20);
-  const gap = isSmall ? 6 : (isMedium ? 8 : 12);
-  
-  // 7. 构建 children 数组（✅ 所有颜色直接用 { light, dark } 对象）
-  const children = [
-    // 头部：图标 + 标题
-    {
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 10,
-      children: [
-        {
-          type: 'image',
-          src: 'sf-symbol:calendar',
-          color: { light: '#E63946', dark: '#FF6B6B' },  // ✅ 对象格式
-          width: isLarge ? 28 : 24,
-          height: isLarge ? 28 : 24
-        },
-        {
-          type: 'text',
-          text: '今日黄历',
-          font: { size: F.title, weight: 'bold' },
-          textColor: { light: '#000000', dark: '#FFFFFF' },  // ✅ 对象格式
-          textAlign: 'left'
-        }
-      ]
-    },
-    // 公历日期
-    {
-      type: 'text',
-      text: `${Y}年${M}月${D}日 星期${W}`,
-      font: { size: F.date, weight: 'semibold' },
-      textColor: { light: '#1A1A1A', dark: '#E0E0E0' },  // ✅ 对象格式
-      textAlign: 'left',
-      maxLines: 1
-    },
-    // 农历信息
-    showLunar ? {
-      type: 'text',
-      text: `${lunar.gz}年 ${lunar.ani}年 ${lunar.cn}`,
-      font: { size: F.body, weight: 'medium' },
-      textColor: { light: '#666666', dark: '#999999' },  // ✅ 对象格式
-      textAlign: 'left',
-      maxLines: 1
-    } : null,
-    // 分隔线（大尺寸显示）
-    isLarge ? {
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      padding: [8, 0],
-      children: [
-        {
-          type: 'stack',
-          direction: 'row',
-          flex: 1,
-          backgroundColor: { light: '#E0E0E0', dark: '#333333' },  // ✅ 对象格式
-          height: 1
-        }
-      ]
-    } : null,
-    // 宜事项
-    showYiJi ? {
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 8,
-      children: [
-        {
-          type: 'image',
-          src: 'sf-symbol:checkmark.circle.fill',
-          color: { light: '#E63946', dark: '#FF6B6B' },  // ✅ 对象格式
-          width: 16,
-          height: 16
-        },
-        {
-          type: 'text',
-          text: '宜：' + yiji.yi.join('  '),
-          font: { size: F.tiny, weight: 'medium' },
-          textColor: { light: '#E63946', dark: '#FF6B6B' },  // ✅ 对象格式
-          textAlign: 'left',
-          maxLines: 1
-        }
-      ]
-    } : null,
-    // 忌事项
-    showYiJi ? {
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 8,
-      children: [
-        {
-          type: 'image',
-          src: 'sf-symbol:xmark.circle.fill',
-          color: { light: '#1D3557', dark: '#4ECDC4' },  // ✅ 对象格式
-          width: 16,
-          height: 16
-        },
-        {
-          type: 'text',
-          text: '忌：' + yiji.ji.join('  '),
-          font: { size: F.tiny, weight: 'medium' },
-          textColor: { light: '#1D3557', dark: '#4ECDC4' },  // ✅ 对象格式
-          textAlign: 'left',
-          maxLines: 1
-        }
-      ]
-    } : null,
-    // 冲煞信息 + 幸运指数
-    {
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 12,
-      children: [
-        {
-          type: 'text',
-          text: `冲${ANI[hash%12]} 煞${["东","南","西","北"][hash%4]}`,
-          font: { size: F.tiny, weight: 'regular' },
-          textColor: { light: '#666666', dark: '#999999' },  // ✅ 对象格式
-          textAlign: 'left',
-          maxLines: 1
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'text',
-          text: '★'.repeat((hash%5)+1) + '☆'.repeat(4-(hash%5)),
-          font: { size: F.tiny, weight: 'semibold' },
-          textColor: { light: '#F77F00', dark: '#FFD93D' },  // ✅ 对象格式
-          textAlign: 'right'
-        }
-      ]
+  function leapMonth(y) { return lunarInfo[y - 1900] & 0xf; }
+
+  function monthDays(y, m) { return (lunarInfo[y - 1900] & (0x10000 >> m)) ? 30 : 29; }
+
+  function solarToLunar(yy, mm, dd) {
+    let baseDate = new Date(1900, 0, 31);
+    let objDate = new Date(yy, mm - 1, dd);
+    let offset = Math.floor((objDate - baseDate) / 86400000);
+    let i, year = 1900, temp = 0;
+
+    for (i = 1900; i < 2100 && offset > 0; i++) {
+      temp = lYearDays(i);
+      offset -= temp;
+      year = i;
     }
-  ].filter(Boolean);
-  
-  // 8. 返回根 Widget（✅ backgroundColor 直接用对象）
+    if (offset < 0) { offset += temp; year--; }
+
+    let leap = leapMonth(year), isLeap = false;
+    for (i = 1; i < 13 && offset > 0; i++) {
+      if (leap > 0 && i === (leap + 1) && !isLeap) { --i; isLeap = true; temp = leapDays(year); }
+      else { temp = monthDays(year, i); }
+      if (isLeap && i === (leap + 1)) isLeap = false;
+      offset -= temp;
+      if (offset < 0) { offset += temp; i++; break; }
+    }
+
+    let ganIndex = (year - 4) % 10, zhiIndex = (year - 4) % 12;
+    return {
+      year, month: i, day: offset + 1, isLeap,
+      ganZhi: Gan[ganIndex] + Zhi[zhiIndex],
+      animal: Animals[zhiIndex],
+      monthStr: lunarMonths[i - 1],
+      dayStr: getDayString(offset + 1)
+    };
+  }
+
+  function getDayString(day) {
+    const strs = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+                  '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+                  '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+    return strs[day - 1] || '';
+  }
+
   return {
-    type: 'widget',
-    backgroundColor: { light: '#FFFFFF', dark: '#000000' },  // ✅ 关键：对象格式！
-    padding: padding,
-    gap: gap,
-    children: children
+    getLunarDate: (d) => solarToLunar(d.getFullYear(), d.getMonth() + 1, d.getDate()),
+    solarToLunar
   };
+})();
+
+// ========== 工具函数 ==========
+function getNthWeekday(year, month, weekday, n) {
+  const first = new Date(year, month - 1, 1);
+  const diff = (weekday - first.getDay() + 7) % 7;
+  return new Date(year, month - 1, 1 + diff + (n - 1) * 7);
+}
+
+function daysDiff(from, to) {
+  return Math.ceil((to - from) / (24 * 60 * 60 * 1000));
+}
+
+function getCountdowns() {
+  const now = new Date(), year = now.getFullYear(), results = [];
+
+  for (const [k, v] of Object.entries(HOLIDAYS)) {
+    const [m, d] = k.split('-').map(Number);
+    let t = new Date(year, m - 1, d);
+    if (t < now) t = new Date(year + 1, m - 1, d);
+    results.push({ name: v.name, days: daysDiff(now, t), type: v.type });
+  }
+
+  for (const [k, v] of Object.entries(FLOATING_HOLIDAYS)) {
+    let t = v.calc(year);
+    if (t < now) t = v.calc(year + 1);
+    results.push({ name: v.name, days: daysDiff(now, t), type: 'floating' });
+  }
+
+  for (const [k, name] of Object.entries(SOLAR_TERMS)) {
+    const [m, d] = k.split('-').map(Number);
+    let t = new Date(year, m - 1, d);
+    if (t < now) t = new Date(year + 1, m - 1, d);
+    results.push({ name, days: daysDiff(now, t), type: 'term' });
+  }
+
+  try {
+    const lunar = Lunar.getLunarDate(now);
+    for (const [k, name] of Object.entries(LUNAR_HOLIDAYS)) {
+      const [lm, ld] = k.split('-').map(Number);
+      let tm = (lunar.month > lm || (lunar.month === lm && lunar.day >= ld)) ? lm + 12 : lm;
+      let t = new Date(year, tm - 1, ld);
+      if (t < now) t = new Date(year + 1, tm - 1, ld);
+      results.push({ name, days: daysDiff(now, t), type: 'lunar' });
+    }
+  } catch (e) {}
+
+  results.sort((a, b) => a.days - b.days);
+  const seen = new Set();
+  return results.filter(r => !seen.has(r.name + r.days) && seen.add(r.name + r.days));
+}
+
+// ========== 🎯 核心：按尺寸渲染不同布局 ==========
+export default async function(ctx) {
+  try {
+    const env = ctx.env || {};
+    const widgetFamily = ctx.widgetFamily || 'systemMedium';
+    
+    const title = env.TITLE || '节日倒计时';
+    const showHolidays = env.SHOW_HOLIDAYS !== 'false';
+    const showTerms = env.SHOW_TERMS !== 'false';
+    const showTraditional = env.SHOW_TRADITIONAL !== 'false';
+    const itemsPerRow = parseInt(env.ITEMS_PER_ROW) || 4;
+    const maxRows = parseInt(env.MAX_ROWS) || 5;
+
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+    const weekday = ['日','一','二','三','四','五','六'][now.getDay()];
+    const solarDate = `${m}月${d}日 周${weekday}`;
+
+    let lunarDate = '';
+    try {
+      const lunar = Lunar.getLunarDate(now);
+      if (lunar) {
+        const mp = lunar.isLeap ? '闰' : '';
+        lunarDate = `农历${lunar.monthStr}月${lunar.dayStr}`;
+      }
+    } catch (e) { lunarDate = '农历 --'; }
+
+    let countdowns = [];
+    try { countdowns = getCountdowns(); } catch (e) {}
+    if (!showHolidays) countdowns = countdowns.filter(c => c.type !== 'holiday');
+    if (!showTerms) countdowns = countdowns.filter(c => c.type !== 'term');
+    if (!showTraditional) countdowns = countdowns.filter(c => c.type !== 'lunar' && c.type !== 'floating');
+
+    // 🔹 锁屏圆形 (24×24)
+    if (widgetFamily === 'accessoryCircular') {
+      const next = countdowns[0];
+      return {
+        type: 'widget',
+        padding: 6,
+        backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+        refreshAfter: 'PT1H',
+        children: [{
+          type: 'stack', direction: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          children: [
+            { type: 'image', src: 'sf-symbol:calendar.circle.fill', color: { light: '#FF3B30', dark: '#FF453A' }, width: 22, height: 22 },
+            { type: 'text', text: next ? String(next.days) : '--', font: { size: 16, weight: 'bold' }, textColor: { light: '#1D1D1F', dark: '#F5F5F7' }, textAlign: 'center' }
+          ]
+        }]
+      };
+    }
+
+    // 🔹 锁屏矩形/内联
+    if (widgetFamily === 'accessoryRectangular' || widgetFamily === 'accessoryInline') {
+      const next = countdowns[0];
+      return {
+        type: 'widget',
+        padding: 8,
+        backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+        refreshAfter: 'PT1H',
+        children: [{
+          type: 'stack', direction: 'row', alignItems: 'center', gap: 6,
+          children: [
+            { type: 'image', src: 'sf-symbol:calendar', color: { light: '#FF3B30', dark: '#FF453A' }, width: 18, height: 18 },
+            { type: 'text', text: next ? `${title}: ${next.name} ${next.days}天` : title, font: { size: 12, weight: 'medium' }, textColor: { light: '#1D1D1F', dark: '#F5F5F7' }, maxLines: 1, flex: 1 }
+          ]
+        }]
+      };
+    }
+
+    // 🔹 主屏幕小尺寸 (2×2)
+    if (widgetFamily === 'systemSmall') {
+      const items = countdowns.slice(0, 2);
+      return {
+        type: 'widget',
+        padding: 10,
+        backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+        refreshAfter: 'PT1H',
+        children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+              { type: 'image', src: 'sf-symbol:calendar.circle.fill', color: { light: '#FF3B30', dark: '#FF453A' }, width: 16, height: 16 },
+              { type: 'text', text: title, font: { size: 12, weight: 'semibold' }, textColor: { light: '#1D1D1F', dark: '#F5F5F7' }, maxLines: 1 }
+            ]},
+          { type: 'text', text: `${solarDate} | ${lunarDate}`, font: { size: 9, weight: 'regular' }, textColor: { light: '#666666', dark: '#999999' }, maxLines: 1 },
+          ...items.map((c, i) => ({ type: 'text', text: `${c.name} ${c.days}天`, font: { size: 10, weight: i === 0 ? 'semibold' : 'regular' }, textColor: { light: '#333333', dark: '#CCCCCC' }, maxLines: 1 }))
+        ]
+      };
+    }
+
+    // 🔹 主屏幕中/大尺寸（默认完整布局）
+    const total = itemsPerRow * maxRows;
+    const items = countdowns.slice(0, total);
+    const rows = [];
+    for (let i = 0; i < items.length; i += itemsPerRow) {
+      const row = items.slice(i, i + itemsPerRow).map(c => `${c.name}${c.days}天`).join(' | ');
+      rows.push(row);
+    }
+
+    const children = [
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
+          { type: 'image', src: 'sf-symbol:calendar', color: { light: '#FF3B30', dark: '#FF453A' }, width: 22, height: 22 },
+          { type: 'text', text: title, font: { size: 15, weight: 'semibold' }, textColor: { light: '#1D1D1F', dark: '#F5F5F7' } }
+        ]},
+      { type: 'text', text: solarDate, font: { size: 11, weight: 'medium' }, textColor: { light: '#666666', dark: '#999999' }, maxLines: 1 },
+      { type: 'text', text: lunarDate, font: { size: 10, weight: 'regular' }, textColor: { light: '#999999', dark: '#777777' }, maxLines: 1 }
+    ];
+    rows.forEach((row, i) => {
+      children.push({ type: 'text', text: row, font: { size: 12, weight: i === 0 ? 'semibold' : 'regular' }, textColor: { light: '#333333', dark: '#CCCCCC' }, maxLines: 1 });
+    });
+
+    return {
+      type: 'widget',
+      backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+      padding: 12,
+      refreshAfter: 'PT30M',
+      children
+    };
+
+  } catch (error) {
+    // 🛡️ 全局降级：确保任何错误下组件仍能显示
+    return {
+      type: 'widget',
+      padding: 12,
+      backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+      children: [{
+        type: 'stack', direction: 'column', alignItems: 'center', gap: 8,
+        children: [
+          { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: { light: '#FF9500', dark: '#FF9F0A' }, width: 22, height: 22 },
+          { type: 'text', text: '加载失败', font: { size: 12, weight: 'medium' }, textColor: { light: '#FF3B30', dark: '#FF453A' } }
+        ]
+      }]
+    };
+  }
 }
 
