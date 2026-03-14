@@ -301,7 +301,7 @@ export default async function(ctx) {
  return {
  type: 'widget',
  padding: 6,
- backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  refreshAfter: 'PT1H',
  children: [{
  type: 'stack', direction: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
@@ -322,7 +322,7 @@ export default async function(ctx) {
  return {
  type: 'widget',
  padding: 8,
- backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  refreshAfter: 'PT1H',
  children: [{
  type: 'stack', direction: 'row', alignItems: 'center', gap: 6,
@@ -349,7 +349,7 @@ export default async function(ctx) {
  return {
  type: 'widget',
  padding: CONFIG.padding,
- backgroundColor: { light: '#F2F2F7', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  refreshAfter: 'PT1H',
  children: renderGrid(filtered, 4, CONFIG.fontSize.small)
  };
@@ -370,7 +370,7 @@ export default async function(ctx) {
  return {
  type: 'widget',
  padding: CONFIG.padding,
- backgroundColor: { light: '#F2F2F7', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  refreshAfter: 'PT30M',
  children: renderGrid(filtered, 5, CONFIG.fontSize.medium)
  };
@@ -390,7 +390,7 @@ export default async function(ctx) {
 
  return {
  type: 'widget',
- backgroundColor: { light: '#F2F2F7', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  padding: CONFIG.padding,
  refreshAfter: 'PT30M',
  children: renderGrid(filtered, 6, CONFIG.fontSize.large)
@@ -401,7 +401,7 @@ export default async function(ctx) {
  return {
  type: 'widget',
  padding: 12,
- backgroundColor: { light: '#F2F2F7', dark: '#1C1C1E' },
+ backgroundColor: { light: '#FFFFFF', dark: '#000000' },
  children: [{
  type: 'stack', direction: 'column', alignItems: 'center', gap: 8,
  children: [
