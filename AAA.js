@@ -1,12 +1,12 @@
 /**
- * 🌤️ 和风天气 - Egern 小组件（V7+V1双接口兼容版）
+ * 🌤️ 和风天气 - Egern 小组件（经纬度 AQI 版）
  * 
  * 环境变量：
  * KEY: 和风天气 API Key（必填）
- * LOCATION: 城市名，如"北京"（可选，默认北京）
- * API_HOST: 你的专属 API 域名（必填）
+ * LOCATION: 城市名（用于查经纬度）
+ * API_HOST: 专属域名（必填）
  * 
- * ✅ 自动检测并使用可用的空气质量接口（V7/V1）
+ * ✅ 空气质量只使用经纬度获取
  */
 
 export default async function(ctx) {
@@ -26,12 +26,15 @@ export default async function(ctx) {
 
   try {
     const host = normalizeHost(apiHost);
+    // 获取经纬度（城市名→经纬度）
     const { lon, lat, city } = await getLocation(ctx, location, apiKey, host);
     
+    // 用经纬度获取天气
     const now = await fetchWeatherNow(ctx, apiKey, lon, lat, host);
 
     let air = null;
     if (widgetFamily !== 'systemSmall') {
+      // 用经纬度获取空气质量（不支持城市名）
       air = await fetchAirQuality(ctx, apiKey, lon, lat, host);
     }
 
@@ -54,6 +57,7 @@ function normalizeHost(host) {
   return h.replace(/\/$/, '');
 }
 
+// 获取经纬度
 async function getLocation(ctx, location, apiKey, apiHost) {
   const presetLocations = {
     '北京': { lon: '116.4074', lat: '39.9042' },
@@ -161,7 +165,20 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '荆州': { lon: '112.2392', lat: '30.3352' },
     '常德': { lon: '111.6985', lat: '29.0319' },
     '衡阳': { lon: '112.6079', lat: '26.8968' },
-    '宣城': { lon: '118.7580', lat: '30.9456' }
+    '宣城': { lon: '118.7580', lat: '30.9456' },
+    '芜湖': { lon: '118.3764', lat: '31.3263' },
+    '马鞍山': { lon: '118.5079', lat: '31.6893' },
+    '铜陵': { lon: '117.8166', lat: '30.1477' },
+    '池州': { lon: '117.4892', lat: '30.6560' },
+    '滁州': { lon: '118.3162', lat: '32.3036' },
+    '阜阳': { lon: '115.8197', lat: '32.8969' },
+    '淮南': { lon: '116.9840', lat: '32.6475' },
+    '淮北': { lon: '116.7946', lat: '33.9717' },
+    '亳州': { lon: '115.7829', lat: '33.8693' },
+    '六安': { lon: '116.5077', lat: '31.7528' },
+    '黄山': { lon: '118.3373', lat: '29.7116' },
+    '宿州': { lon: '116.9840', lat: '33.6338' },
+    '蚌埠': { lon: '117.3632', lat: '32.9397' }
   };
 
   const cityName = location && location !== 'auto' ? location : '北京';
@@ -180,7 +197,7 @@ async function getLocation(ctx, location, apiKey, apiHost) {
       return { lon: loc.lon, lat: loc.lat, city: loc.name || cityName };
     }
   } catch (e) {
-    // 忽略错误
+    // 忽略
   }
 
   return { lon: '116.4074', lat: '39.9042', city: cityName };
@@ -207,26 +224,23 @@ async function fetchWeatherNow(ctx, key, lon, lat, apiHost) {
   };
 }
 
-// 🔥 智能获取空气质量 - V7和V1双接口兼容
+// 空气质量 - 只使用经纬度获取
 async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
   let result = null;
   
-  // 尝试1: V7 air/now 接口
+  // 方法1: V7 air/now（经度，纬度）
   try {
     const url = `${apiHost}/v7/air/now?location=${lon},${lat}&key=${key}`;
     const resp = await ctx.http.get(url, { timeout: 8000 });
     const data = await resp.json();
     
     if (data.code === '200') {
-      // 尝试多种方式提取 AQI
       let aqi = null;
       
-      // 方式1: data.now.aqi
       if (data.now && data.now.aqi !== undefined && data.now.aqi !== null) {
         aqi = Number(data.now.aqi);
       }
       
-      // 方式2: data.indexes 中的 cn-mee
       if (aqi === null && data.indexes) {
         for (let idx of data.indexes) {
           if (idx.code === 'cn-mee' && idx.aqi !== undefined && idx.aqi !== null) {
@@ -236,7 +250,6 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
         }
       }
       
-      // 方式3: data.indexes 中的 cn-mee-1h
       if (aqi === null && data.indexes) {
         for (let idx of data.indexes) {
           if (idx.code === 'cn-mee-1h' && idx.aqi !== undefined && idx.aqi !== null) {
@@ -246,7 +259,6 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
         }
       }
       
-      // 方式4: data.indexes 中任意有 aqi 的
       if (aqi === null && data.indexes) {
         for (let idx of data.indexes) {
           if (idx.aqi !== undefined && idx.aqi !== null && !isNaN(Number(idx.aqi))) {
@@ -256,25 +268,17 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
         }
       }
       
-      // 方式5: data.aqi
-      if (aqi === null && data.aqi !== undefined && data.aqi !== null) {
-        aqi = Number(data.aqi);
-      }
-      
       if (aqi !== null && !isNaN(aqi)) {
         result = { aqi: Math.round(aqi), category: getAQICategory(aqi) };
       }
     }
   } catch (e) {
-    // V7 失败，继续尝试 V1
+    // 继续尝试 V1
   }
   
-  // 如果 V7 成功，直接返回
-  if (result) {
-    return result;
-  }
+  if (result) return result;
   
-  // 尝试2: V1 airquality 接口
+  // 方法2: V1 airquality（纬度/经度）⚠️ 顺序相反
   try {
     const url = `${apiHost}/airquality/v1/current/${lat}/${lon}?key=${key}&lang=zh`;
     const resp = await ctx.http.get(url, { timeout: 8000 });
@@ -283,7 +287,6 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
     if (data.code === '200' && data.indexes) {
       let aqi = null;
       
-      // 优先中国标准
       for (let idx of data.indexes) {
         if (idx.code === 'cn-mee' && idx.aqi !== undefined && idx.aqi !== null) {
           aqi = Number(idx.aqi);
@@ -291,7 +294,6 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
         }
       }
       
-      // 其次 1小时中国标准
       if (aqi === null) {
         for (let idx of data.indexes) {
           if (idx.code === 'cn-mee-1h' && idx.aqi !== undefined && idx.aqi !== null) {
@@ -301,7 +303,6 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
         }
       }
       
-      // 兜底任意有 aqi 的
       if (aqi === null) {
         for (let idx of data.indexes) {
           if (idx.aqi !== undefined && idx.aqi !== null && !isNaN(Number(idx.aqi))) {
@@ -316,10 +317,9 @@ async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
       }
     }
   } catch (e) {
-    // V1 也失败
+    // 失败
   }
   
-  // 返回结果或默认值
   return result || { aqi: '--', category: getAQICategory(null) };
 }
 
