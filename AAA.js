@@ -1,13 +1,12 @@
 /**
- * 🌤️ 和风天气 - Egern 小组件（100城市完整修复版）
+ * 🌤️ 和风天气 - Egern 小组件（V7+V1双接口兼容版）
  * 
  * 环境变量：
  * KEY: 和风天气 API Key（必填）
  * LOCATION: 城市名，如"北京"（可选，默认北京）
- * API_HOST: 你的专属 API 域名，如"xxx.re.qweatherapi.com"（必填！）
+ * API_HOST: 你的专属 API 域名（必填）
  * 
- * ✅ 已内置100个主要城市坐标，支持全国任意城市查询
- * ✅ AQI 使用 V1 接口，兼容最新API规范
+ * ✅ 自动检测并使用可用的空气质量接口（V7/V1）
  */
 
 export default async function(ctx) {
@@ -22,14 +21,12 @@ export default async function(ctx) {
   }
   
   if (!apiHost) {
-    return renderError('⚠️ 请配置 API_HOST 环境变量\n\n获取方式：\n1. 登录和风天气控制台\n2. 找到你的专属域名\n3. 格式如：xxx.re.qweatherapi.com');
+    return renderError('⚠️ 请配置 API_HOST 环境变量');
   }
 
   try {
     const host = normalizeHost(apiHost);
     const { lon, lat, city } = await getLocation(ctx, location, apiKey, host);
-    
-    console.log(`📍 城市：${city}, 经度：${lon}, 纬度：${lat}`);
     
     const now = await fetchWeatherNow(ctx, apiKey, lon, lat, host);
 
@@ -45,12 +42,10 @@ export default async function(ctx) {
     }
 
   } catch (e) {
-    console.error('❌ Widget Error:', e);
     return renderError(`❌ ${e.message}`);
   }
 }
 
-// 🔧 标准化 API_HOST 格式
 function normalizeHost(host) {
   let h = (host || '').trim();
   if (!h.startsWith('http://') && !h.startsWith('https://')) {
@@ -59,16 +54,12 @@ function normalizeHost(host) {
   return h.replace(/\/$/, '');
 }
 
-// 🔧 获取位置 - 100城市预设 + 地理API兜底
 async function getLocation(ctx, location, apiKey, apiHost) {
   const presetLocations = {
-    // ===== 直辖市 (4) =====
     '北京': { lon: '116.4074', lat: '39.9042' },
     '上海': { lon: '121.4737', lat: '31.2304' },
     '天津': { lon: '117.2008', lat: '39.0842' },
     '重庆': { lon: '106.5516', lat: '29.5630' },
-    
-    // ===== 省会城市 (23) =====
     '广州': { lon: '113.2644', lat: '23.1291' },
     '深圳': { lon: '114.0579', lat: '22.5431' },
     '杭州': { lon: '120.1551', lat: '30.2741' },
@@ -97,15 +88,11 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '乌鲁木齐': { lon: '87.6168', lat: '43.8256' },
     '拉萨': { lon: '91.1409', lat: '29.6456' },
     '呼和浩特': { lon: '111.7492', lat: '40.8414' },
-    
-    // ===== 计划单列市 (5) =====
     '青岛': { lon: '120.3826', lat: '36.0671' },
     '厦门': { lon: '118.0894', lat: '24.4798' },
     '宁波': { lon: '121.5440', lat: '29.8683' },
     '大连': { lon: '121.6147', lat: '38.9140' },
     '无锡': { lon: '120.3119', lat: '31.4912' },
-    
-    // ===== 经济强市 (20) =====
     '苏州': { lon: '120.5853', lat: '31.2989' },
     '东莞': { lon: '113.7518', lat: '23.0205' },
     '佛山': { lon: '113.1228', lat: '23.0218' },
@@ -126,8 +113,6 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '泰州': { lon: '119.9223', lat: '32.4527' },
     '盐城': { lon: '120.1253', lat: '33.3475' },
     '临沂': { lon: '118.3563', lat: '35.1043' },
-    
-    // ===== 海南全省 (12) =====
     '三亚': { lon: '109.5119', lat: '18.2528' },
     '琼海': { lon: '110.4667', lat: '19.2460' },
     '万宁': { lon: '110.3887', lat: '18.7962' },
@@ -140,8 +125,6 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '临高': { lon: '109.6877', lat: '19.9084' },
     '定安': { lon: '110.3429', lat: '19.6849' },
     '屯昌': { lon: '110.1029', lat: '19.3638' },
-    
-    // ===== 旅游城市 (15) =====
     '桂林': { lon: '110.2901', lat: '25.2736' },
     '丽江': { lon: '100.2299', lat: '26.8721' },
     '大理': { lon: '100.2673', lat: '25.6065' },
@@ -157,8 +140,6 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '香格里拉': { lon: '99.7065', lat: '27.8269' },
     '西双版纳': { lon: '100.7979', lat: '22.0017' },
     '呼伦贝尔': { lon: '119.7656', lat: '49.2117' },
-    
-    // ===== 其他重要城市 (21) =====
     '保定': { lon: '115.4645', lat: '38.8738' },
     '邯郸': { lon: '114.5391', lat: '36.6255' },
     '洛阳': { lon: '112.4540', lat: '34.6197' },
@@ -179,44 +160,32 @@ async function getLocation(ctx, location, apiKey, apiHost) {
     '宜昌': { lon: '111.2900', lat: '30.6919' },
     '荆州': { lon: '112.2392', lat: '30.3352' },
     '常德': { lon: '111.6985', lat: '29.0319' },
-    '衡阳': { lon: '112.6079', lat: '26.8968' }
+    '衡阳': { lon: '112.6079', lat: '26.8968' },
+    '宣城': { lon: '118.7580', lat: '30.9456' }
   };
 
   const cityName = location && location !== 'auto' ? location : '北京';
   
-  // 1️⃣ 优先使用预设坐标（100城市，响应最快）
   if (presetLocations[cityName]) {
-    console.log(`✅ 使用预设坐标：${cityName}`);
     return { ...presetLocations[cityName], city: cityName };
   }
 
-  // 2️⃣ 预设没有则调用地理API（使用个人API_HOST，避免公共域名限流）
   try {
     const geoUrl = `${apiHost}/geo/v2/city/lookup?location=${encodeURIComponent(cityName)}&key=${apiKey}&number=1&lang=zh`;
     const geoResp = await ctx.http.get(geoUrl, { timeout: 5000 });
     const geoData = await geoResp.json();
     
-    console.log('🔍 地理API返回:', JSON.stringify(geoData));
-    
     if (geoData.code === '200' && geoData.location?.[0]) {
       const loc = geoData.location[0];
-      console.log(`✅ 找到城市：${loc.name}, 坐标：${loc.lat},${loc.lon}`);
-      return {
-        lon: loc.lon,
-        lat: loc.lat,
-        city: loc.name || cityName
-      };
+      return { lon: loc.lon, lat: loc.lat, city: loc.name || cityName };
     }
-    console.log(`⚠️ 地理API未找到 "${cityName}", 代码：${geoData.code}`);
   } catch (e) {
-    console.log(`❌ 地理查询失败：${e.message}，使用兜底坐标`);
+    // 忽略错误
   }
 
-  // 3️⃣ 兜底：返回北京坐标（避免完全失败）
   return { lon: '116.4074', lat: '39.9042', city: cityName };
 }
 
-// 🔧 获取实时天气
 async function fetchWeatherNow(ctx, key, lon, lat, apiHost) {
   const url = `${apiHost}/v7/weather/now?location=${lon},${lat}&key=${key}&lang=zh`;
   const resp = await ctx.http.get(url, { timeout: 8000 });
@@ -238,66 +207,122 @@ async function fetchWeatherNow(ctx, key, lon, lat, apiHost) {
   };
 }
 
-// 🔧 获取空气质量 - 多重降级策略
+// 🔥 智能获取空气质量 - V7和V1双接口兼容
 async function fetchAirQuality(ctx, key, lon, lat, apiHost) {
-  // 方法1: V1 空气质量接口（官方推荐）
-  try {
-    const url = `${apiHost}/airquality/v1/current/${lat}/${lon}?key=${key}&lang=zh`;
-    console.log(`🌫️ AQI V1请求：${url}`);
-    
-    const resp = await ctx.http.get(url, { timeout: 8000 });
-    const data = await resp.json();
-    
-    if (data.code === '200' && data.indexes) {
-      for (let idx of data.indexes) {
-        if (idx.code === 'cn-mee' && idx.aqi) {
-          console.log(`✅ AQI: ${idx.aqi} (cn-mee)`);
-          return { aqi: Math.round(Number(idx.aqi)), category: getAQICategory(idx.aqi) };
-        }
-        if (idx.code === 'cn-mee-1h' && idx.aqi) {
-          console.log(`✅ AQI: ${idx.aqi} (cn-mee-1h)`);
-          return { aqi: Math.round(Number(idx.aqi)), category: getAQICategory(idx.aqi) };
-        }
-      }
-      for (let idx of data.indexes) {
-        if (idx.aqi && !isNaN(Number(idx.aqi))) {
-          console.log(`✅ AQI: ${idx.aqi} (${idx.code})`);
-          return { aqi: Math.round(Number(idx.aqi)), category: getAQICategory(idx.aqi) };
-        }
-      }
-    }
-  } catch (e) {
-    console.log(`❌ AQI V1失败: ${e.message}`);
-  }
+  let result = null;
   
-  // 方法2: V7 air/now 接口（旧版兼容）
+  // 尝试1: V7 air/now 接口
   try {
     const url = `${apiHost}/v7/air/now?location=${lon},${lat}&key=${key}`;
     const resp = await ctx.http.get(url, { timeout: 8000 });
     const data = await resp.json();
     
     if (data.code === '200') {
+      // 尝试多种方式提取 AQI
       let aqi = null;
-      if (data.now && data.now.aqi) aqi = data.now.aqi;
-      else if (data.indexes && data.indexes.length > 0) {
+      
+      // 方式1: data.now.aqi
+      if (data.now && data.now.aqi !== undefined && data.now.aqi !== null) {
+        aqi = Number(data.now.aqi);
+      }
+      
+      // 方式2: data.indexes 中的 cn-mee
+      if (aqi === null && data.indexes) {
         for (let idx of data.indexes) {
-          if (idx.aqi) { aqi = idx.aqi; break; }
+          if (idx.code === 'cn-mee' && idx.aqi !== undefined && idx.aqi !== null) {
+            aqi = Number(idx.aqi);
+            break;
+          }
         }
       }
-      if (aqi && !isNaN(Number(aqi))) {
-        console.log(`✅ AQI (V7): ${aqi}`);
-        return { aqi: Math.round(Number(aqi)), category: getAQICategory(aqi) };
+      
+      // 方式3: data.indexes 中的 cn-mee-1h
+      if (aqi === null && data.indexes) {
+        for (let idx of data.indexes) {
+          if (idx.code === 'cn-mee-1h' && idx.aqi !== undefined && idx.aqi !== null) {
+            aqi = Number(idx.aqi);
+            break;
+          }
+        }
+      }
+      
+      // 方式4: data.indexes 中任意有 aqi 的
+      if (aqi === null && data.indexes) {
+        for (let idx of data.indexes) {
+          if (idx.aqi !== undefined && idx.aqi !== null && !isNaN(Number(idx.aqi))) {
+            aqi = Number(idx.aqi);
+            break;
+          }
+        }
+      }
+      
+      // 方式5: data.aqi
+      if (aqi === null && data.aqi !== undefined && data.aqi !== null) {
+        aqi = Number(data.aqi);
+      }
+      
+      if (aqi !== null && !isNaN(aqi)) {
+        result = { aqi: Math.round(aqi), category: getAQICategory(aqi) };
       }
     }
   } catch (e) {
-    console.log(`❌ AQI V7失败: ${e.message}`);
+    // V7 失败，继续尝试 V1
   }
   
-  console.log('❌ 所有AQI方法都失败');
-  return { aqi: '--', category: getAQICategory(null) };
+  // 如果 V7 成功，直接返回
+  if (result) {
+    return result;
+  }
+  
+  // 尝试2: V1 airquality 接口
+  try {
+    const url = `${apiHost}/airquality/v1/current/${lat}/${lon}?key=${key}&lang=zh`;
+    const resp = await ctx.http.get(url, { timeout: 8000 });
+    const data = await resp.json();
+    
+    if (data.code === '200' && data.indexes) {
+      let aqi = null;
+      
+      // 优先中国标准
+      for (let idx of data.indexes) {
+        if (idx.code === 'cn-mee' && idx.aqi !== undefined && idx.aqi !== null) {
+          aqi = Number(idx.aqi);
+          break;
+        }
+      }
+      
+      // 其次 1小时中国标准
+      if (aqi === null) {
+        for (let idx of data.indexes) {
+          if (idx.code === 'cn-mee-1h' && idx.aqi !== undefined && idx.aqi !== null) {
+            aqi = Number(idx.aqi);
+            break;
+          }
+        }
+      }
+      
+      // 兜底任意有 aqi 的
+      if (aqi === null) {
+        for (let idx of data.indexes) {
+          if (idx.aqi !== undefined && idx.aqi !== null && !isNaN(Number(idx.aqi))) {
+            aqi = Number(idx.aqi);
+            break;
+          }
+        }
+      }
+      
+      if (aqi !== null && !isNaN(aqi)) {
+        result = { aqi: Math.round(aqi), category: getAQICategory(aqi) };
+      }
+    }
+  } catch (e) {
+    // V1 也失败
+  }
+  
+  // 返回结果或默认值
+  return result || { aqi: '--', category: getAQICategory(null) };
 }
 
-// 🔧 AQI 等级（中国标准 0-500）
 function getAQICategory(aqi) {
   const num = parseInt(aqi);
   if (!num || isNaN(num)) return { text: '--', color: { light: '#999999', dark: '#888888' } };
@@ -309,7 +334,6 @@ function getAQICategory(aqi) {
   return { text: '严重', color: { light: '#7E3C9E', dark: '#8E5FC9' } };
 }
 
-// 图标映射
 function getWeatherIcon(iconCode) {
   const map = {
     '100': 'sun.max.fill', '101': 'cloud.sun.fill', '102': 'cloud.fill',
@@ -341,7 +365,6 @@ function getWeatherIcon(iconCode) {
   return map[iconCode] || 'cloud.fill';
 }
 
-// 天气颜色
 function getWeatherColor(iconCode) {
   const code = parseInt(iconCode);
   if (code >= 100 && code <= 104) return { light: '#FF9F0A', dark: '#FFB347' };
@@ -352,7 +375,6 @@ function getWeatherColor(iconCode) {
   return { light: '#FF9F0A', dark: '#FFB347' };
 }
 
-// 小尺寸渲染
 function renderSmall(now, city) {
   const icon = getWeatherIcon(now.icon);
   const color = getWeatherColor(now.icon);
@@ -471,7 +493,6 @@ function renderSmall(now, city) {
   };
 }
 
-// 中尺寸渲染
 function renderMedium(now, air, city) {
   const icon = getWeatherIcon(now.icon);
   const color = getWeatherColor(now.icon);
@@ -702,7 +723,6 @@ function renderMedium(now, air, city) {
   };
 }
 
-// 错误渲染
 function renderError(msg) {
   return {
     type: 'widget',
