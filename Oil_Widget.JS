@@ -83,7 +83,7 @@ export default async function (ctx) {
     p95: { light: "#FF6B35", dark: "#FF8A5C" },
     p98: { light: "#FF3B30", dark: "#FF6B6B" },
     diesel: { light: "#30D158", dark: "#5CD67D" },
-    trend: { light: "#007AFF", dark: "#0A84FF" },
+    trend: { light: "#2C2C2E", dark: "#FFFFFF" },
   };
 
   const CACHE_KEY = `qiyoujiage_oil_${regionParam}`;
@@ -180,7 +180,7 @@ export default async function (ctx) {
           const allPrices = valuePart.match(/([\d\.]+)\s*元\/升/g);
           if (allPrices && allPrices.length >= 2) {
             const nums = allPrices.map(p => p.match(/([\d\.]+)/)[1]);
-            amount = `${nums[0]}-${nums[1]}元/L`;
+            amount = `${nums[0]}-${nums[1]}`;
           }
           // 格式2：每吨调整 "200元" 和 "195元"
           else {
@@ -346,4 +346,3 @@ export default async function (ctx) {
     ]
   }
 }
-
