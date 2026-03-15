@@ -9,9 +9,9 @@
  * LOCATION: 城市名，如"北京" （支持预设城市自动经纬度，非预设城市会尝试 geo 查询）
  *
  * ⚠️ 重要提示
- * 1.	公共域名已停用： devapi.qweather.com 、 api.qweather.com  等将从2026年起逐步停止服务
- * 2.	必须使用个人API Host：每个开发者账号都有独立的API Host
- * 3.	从控制台复制：登录 https://console.qweather.com/ → 设置 → 复制API Host
+ * 公共域名已停用： devapi.qweather.com 、 api.qweather.com  等将从2026年起逐步停止服务
+ * 必须使用个人API Host：每个开发者账号都有独立的API Host
+ * 从控制台复制：登录 https://console.qweather.com/ → 设置 → 复制API Host
  *
  */
 
