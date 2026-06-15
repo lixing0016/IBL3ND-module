@@ -1,5 +1,5 @@
 /**
- * 2026 世界杯  - Egern 小组件
+ * 2026 世界杯 - Egern 小组件
  * 数据来源：ESPN
  */
 
@@ -89,20 +89,24 @@ export default async function (ctx) {
   if (!matches.length) return renderError('赛程同步中...');
 
   const bjStr = d => d.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
-  const yObj = new Date(now.getTime() - 86400000);
-  const tObj = new Date(now.getTime() + 86400000);
+  const todayBJ    = bjStr(now);
+  const yesterdayBJ = bjStr(new Date(now.getTime() - 86400000));
+  const tomorrowBJ  = bjStr(new Date(now.getTime() + 86400000));
+
+  // 用北京时间计算昨明天的月日显示
+  const fmtDay = s => `${parseInt(s.slice(4,6))}-${parseInt(s.slice(6,8))}`;
 
   const sections = [
-    { key: 'yesterday', label: '昨天', day: `${yObj.getMonth()+1}-${yObj.getDate()}`, color: { light: '#8E8E93', dark: '#636366' }, list: [] },
-    { key: 'today',     label: '今天', day: `${now.getMonth()+1}-${now.getDate()}`,    color: { light: '#34C759', dark: '#30D158' }, list: [] },
-    { key: 'tomorrow',  label: '明天', day: `${tObj.getMonth()+1}-${tObj.getDate()}`,  color: { light: '#007AFF', dark: '#0A84FF' }, list: [] },
+    { key: 'yesterday', label: '昨天', day: fmtDay(yesterdayBJ), color: { light: '#8E8E93', dark: '#636366' }, list: [] },
+    { key: 'today',     label: '今天', day: fmtDay(todayBJ),     color: { light: '#34C759', dark: '#30D158' }, list: [] },
+    { key: 'tomorrow',  label: '明天', day: fmtDay(tomorrowBJ),  color: { light: '#007AFF', dark: '#0A84FF' }, list: [] },
   ];
 
   matches.forEach(match => {
     if (!match?.date) return;
     const utc = new Date(match.date);
     const ds = bjStr(utc);
-    const sec = ds === bjStr(yObj) ? sections[0] : ds === bjStr(now) ? sections[1] : ds === bjStr(tObj) ? sections[2] : null;
+    const sec = ds === yesterdayBJ ? sections[0] : ds === todayBJ ? sections[1] : ds === tomorrowBJ ? sections[2] : null;
     if (!sec) return;
 
     const comps = match.competitions?.[0]?.competitors || [];
@@ -207,7 +211,6 @@ function renderMedium(sections, now) {
       ]
     }
   ];
-
   if (today.list.length === 0) {
     children.push({ type: 'spacer' });
     children.push({
@@ -335,27 +338,7 @@ function capsule(text, textColor, bgColor) {
 }
 
 function selectMediumMatches(list) {
-  if (list.length <= 3) return list;
-
-  const isLiveState = s => s === 'in' || s === 'in_progress' || s === 'STATUS_IN_PROGRESS' || s === 'halftime' || s === 'STATUS_HALFTIME';
-  const isPostState = s => s === 'post' || s === 'final' || s === 'STATUS_FINAL';
-  const liveIdx = list.findIndex(m => isLiveState(m.state));
-  if (liveIdx !== -1) {
-    const before = liveIdx > 0 ? list[liveIdx - 1] : null;
-    const after  = liveIdx < list.length - 1 ? list[liveIdx + 1] : null;
-    const result = [];
-    if (before) result.push(before);
-    result.push(list[liveIdx]);
-    if (after) result.push(after);
-    return result.slice(0, 3);
-  }
-  const preIdx = list.findIndex(m => !isPostState(m.state));
-  if (preIdx !== -1) {
-    const start = Math.max(0, preIdx - 2);
-    return list.slice(start, start + 3);
-  }
-
-  return list.slice(-3);
+  return list.slice(0, 4);
 }
 
 function renderError(msg) {
