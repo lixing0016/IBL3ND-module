@@ -207,6 +207,7 @@ function renderMedium(sections, now) {
       ]
     }
   ];
+
   if (today.list.length === 0) {
     children.push({ type: 'spacer' });
     children.push({
@@ -334,43 +335,26 @@ function capsule(text, textColor, bgColor) {
 }
 
 function selectMediumMatches(list) {
+  if (list.length <= 3) return list;
+
   const isLiveState = s => s === 'in' || s === 'in_progress' || s === 'STATUS_IN_PROGRESS' || s === 'halftime' || s === 'STATUS_HALFTIME';
   const isPostState = s => s === 'post' || s === 'final' || s === 'STATUS_FINAL';
-  const liveIndexes = list.reduce((arr, m, i) => {
-    if (isLiveState(m.state)) arr.push(i);
-    return arr;
-  }, []);
-  if (liveIndexes.length > 0) {
-    const liveIdx = liveIndexes[0];
-    let beforeIdx = -1;
-    for (let i = liveIdx - 1; i >= 0; i--) {
-      if (isPostState(list[i].state)) { beforeIdx = i; break; }
-    }
-    let afterIdx = -1;
-    for (let i = liveIdx + 1; i < list.length; i++) {
-      afterIdx = i; break;
-    }
-
+  const liveIdx = list.findIndex(m => isLiveState(m.state));
+  if (liveIdx !== -1) {
+    const before = liveIdx > 0 ? list[liveIdx - 1] : null;
+    const after  = liveIdx < list.length - 1 ? list[liveIdx + 1] : null;
     const result = [];
-    if (beforeIdx !== -1) result.push(list[beforeIdx]);
-    else if (liveIdx - 1 >= 0) result.push(list[liveIdx - 1]);
+    if (before) result.push(before);
     result.push(list[liveIdx]);
-    if (afterIdx !== -1) result.push(list[afterIdx]);
-
-    while (result.length < 3 && result.length < list.length) {
-      const last = list.indexOf(result[result.length - 1]);
-      if (last + 1 < list.length && !result.includes(list[last + 1])) {
-        result.push(list[last + 1]);
-      } else break;
-    }
+    if (after) result.push(after);
     return result.slice(0, 3);
   }
-
-  const preIdx = list.findIndex(m => !isLiveState(m.state) && !isPostState(m.state));
+  const preIdx = list.findIndex(m => !isPostState(m.state));
   if (preIdx !== -1) {
-    const start = Math.max(0, preIdx - 1);
+    const start = Math.max(0, preIdx - 2);
     return list.slice(start, start + 3);
   }
+
   return list.slice(-3);
 }
 
@@ -382,4 +366,5 @@ function renderError(msg) {
       children: [{ type: 'text', text: `⚽ ${msg}`, font: { size: 13 }, textColor: { light: '#FF3B30', dark: '#FF453A' } }]
     }]
   };
+}
 }
