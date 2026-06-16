@@ -1,7 +1,11 @@
-export default async function(ctx) {
-  const data = await ctx.response.json();
-  if (data?.data?.confList) {
-    delete data.data.confList.Minor_mode_card;
-  }
-  return { body: data };
+let obj = JSON.parse($response.body);
+
+if (obj.data) {
+    obj.data.title = "iBL3ND";
+    obj.data.city_name = "iBL3ND";
+    obj.data.distance = 0;
 }
+
+$done({
+    body: JSON.stringify(obj)
+});
