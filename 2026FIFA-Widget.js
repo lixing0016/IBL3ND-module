@@ -30,6 +30,8 @@ const teamNamesCN = {
   "Wales": "威尔士", "Italy": "意大利",
   "Peru": "秘鲁", "Chile": "智利", "Nigeria": "尼日利亚",
   "Mali": "马里", "Iraq": "伊拉克",
+  "Congo DR": "刚果(金)", "DR Congo": "刚果(金)", "DR Congo Republic": "刚果(金)",
+  "Democratic Republic of the Congo": "刚果(金)", "Congo": "刚果(金)",
 };
 
 const teamFlags = {
@@ -59,6 +61,8 @@ const teamFlags = {
   "Wales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "Italy": "🇮🇹",
   "Peru": "🇵🇪", "Chile": "🇨🇱", "Nigeria": "🇳🇬",
   "Mali": "🇲🇱", "Iraq": "🇮🇶",
+  "Congo DR": "🇨🇩", "DR Congo": "🇨🇩", "DR Congo Republic": "🇨🇩",
+  "Democratic Republic of the Congo": "🇨🇩", "Congo": "🇨🇩",
 };
 
 function getTeamInfo(name) {
@@ -93,7 +97,6 @@ export default async function (ctx) {
   const yesterdayBJ = bjStr(new Date(now.getTime() - 86400000));
   const tomorrowBJ  = bjStr(new Date(now.getTime() + 86400000));
 
-  // 用北京时间计算昨明天的月日显示
   const fmtDay = s => `${parseInt(s.slice(4,6))}-${parseInt(s.slice(6,8))}`;
 
   const sections = [
@@ -211,6 +214,7 @@ function renderMedium(sections, now) {
       ]
     }
   ];
+
   if (today.list.length === 0) {
     children.push({ type: 'spacer' });
     children.push({
@@ -274,6 +278,7 @@ function matchCard(m, cardBg) {
   return {
     type: 'stack', direction: 'row', alignItems: 'center',
     backgroundColor: cardBg, borderRadius: 12, padding: [7, 10, 7, 10], gap: 6,
+    url: 'xhsdiscover://live_audience?emceeUserId=59b3829850c4b4197d115edf&pre_source=wcup26_home&source=live_calendar&liveTrailerId=137950885801406275',
     children: [
       { type: 'text', text: m.time, font: { size: 11 }, textColor: { light: '#8E8E93', dark: '#636366' }, width: 36, textAlign: 'center' },
       capsule(statusLabel, statusColor, statusBg(m.state)),
