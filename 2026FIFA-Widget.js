@@ -92,13 +92,11 @@ export default async function (ctx) {
 
   if (!matches.length) return renderError('赛程同步中...');
 
-  // 用北京时间字符串做日期比较，避免时区偏差
   const bjStr = d => d.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
   const todayBJ    = bjStr(now);
   const yesterdayBJ = bjStr(new Date(now.getTime() - 86400000));
   const tomorrowBJ  = bjStr(new Date(now.getTime() + 86400000));
 
-  // 用北京时间计算昨明天的月日显示
   const fmtDay = s => `${parseInt(s.slice(4,6))}-${parseInt(s.slice(6,8))}`;
 
   const sections = [
@@ -299,7 +297,7 @@ function matchCard(m, cardBg) {
   return {
     type: 'stack', direction: 'row', alignItems: 'center',
     backgroundColor: cardBg, borderRadius: 12, padding: [7, 10, 7, 10], gap: 6,
-    url: 'xhsdiscover://live_audience?emceeUserId=59b3829850c4b4197d115edf&pre_source=wcup26_home&source=live_calendar&liveTrailerId=137950885801406275',
+    url: 'xhsdiscover://live_audience?room_id=570331751630242800',
     children: [
       { type: 'text', text: m.time, font: { size: 11 }, textColor: { light: '#8E8E93', dark: '#636366' }, width: 36, textAlign: 'center' },
       capsule(statusLabel, statusColor, statusBg(m.state)),
