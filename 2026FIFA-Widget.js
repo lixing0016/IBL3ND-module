@@ -297,7 +297,7 @@ function matchCard(m, cardBg) {
   return {
     type: 'stack', direction: 'row', alignItems: 'center',
     backgroundColor: cardBg, borderRadius: 12, padding: [7, 10, 7, 10], gap: 6,
-    url: 'xhsdiscover://live_audience?room_id=570331751630242800',
+    url: 'xhsdiscover://webview/www.xiaohongshu.com/worldcup26',
     children: [
       { type: 'text', text: m.time, font: { size: 11 }, textColor: { light: '#8E8E93', dark: '#636366' }, width: 36, textAlign: 'center' },
       capsule(statusLabel, statusColor, statusBg(m.state)),
