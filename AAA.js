@@ -1,136 +1,76 @@
+/**
+ * Egern: t.me → 第三方 Telegram 客户端重定向
+ *
+ * 说明：
+ * - 客户端选择通过模块的 env_schema 写入模块级 env
+ * - 脚本直接读取 ctx.env.CLIENT
+ */
 
-let body = $response.body;
-if (!body) {
-  $done({});
-}
-
-let obj;
-try {
-  obj = JSON.parse(body);
-} catch (e) {
-  $done({ body });
-}
-
-let isEnglish = false;
-
-if (typeof $request !== "undefined" && $request.headers) {
-  const headers = $request.headers;
-  const acceptLang =
-    (headers["Accept-Language"] ||
-      headers["accept-language"] ||
-      "").toLowerCase();
-
-  const zhIndex = acceptLang.indexOf("zh");
-  const enIndex = acceptLang.indexOf("en");
-
-  if (
-    enIndex !== -1 &&
-    (zhIndex === -1 || enIndex < zhIndex)
-  ) {
-    isEnglish = true;
-  }
-}
-
-const i18n = {
-  zh: {
-    justNow: "刚刚",
-    m: "分钟",
-    h: "小时",
-    d: "天"
-  },
-  en: {
-    justNow: "Now",
-    m: "m",
-    h: "h",
-    d: "d"
-  }
+const SCHEME = {
+  Telegram: "tg",
+  Nagram: "tg",
+  Swiftgram: "sg",
+  Turrit: "turrit",
+  iMe: "ime",
+  Nicegram: "ng",
+  Lingogram: "lingo",
 };
 
-const lang = isEnglish ? i18n.en : i18n.zh;
-
-function decodeTimestamp(noteId) {
-  const hex = noteId.slice(0, 8);
-  const ts = parseInt(hex, 16);
-  return new Date(ts * 1000);
-}
-
-function formatTwitterStyleTime(date) {
-  const now = new Date();
-
-  const diffMins = Math.floor(
-    (now - date) / 60000
+function qval(qs, key) {
+  if (!qs) return "";
+  const re = new RegExp(
+    "(?:^|&)" + key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^&]*)",
   );
-
-  if (diffMins < 5) {
-    return lang.justNow;
-  }
-
-  if (diffMins < 60) {
-    return `${diffMins}${lang.m}`;
-  }
-
-  const diffHours = Math.floor(diffMins / 60);
-
-  if (diffHours < 24) {
-    return `${diffHours}${lang.h}`;
-  }
-
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffDays < 7) {
-    return `${diffDays}${lang.d}`;
-  }
-
-  const pad = (n) =>
-    String(n).padStart(2, "0");
-
-  return `${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}`;
+  const m = qs.match(re);
+  return m ? decodeURIComponent(m[1]) : "";
 }
 
-function processItem(item) {
-  if (!item) return;
+function deeplink(s, path, qs) {
+  const p = path.split("/").filter(Boolean);
+  if (!p[0]) return "";
 
-  if (item.model_type !== "note") return;
-
-  if (
-    !item.id ||
-    !/^[a-f0-9]{24}$/i.test(item.id)
-  ) {
-    return;
+  if (p[0][0] === "+") {
+    return `${s}://join?invite=${encodeURIComponent(p[0].slice(1))}`;
   }
-
-  try {
-    const d = decodeTimestamp(item.id);
-
-    if (isNaN(d.getTime())) {
-      return;
-    }
-
-    const timeStr =
-      formatTwitterStyleTime(d);
-
-    const timePattern =
-      /^(?:刚刚|Now|\d+(?:分钟|小时|天|m|h|d)|\d{2}-\d{2}) · /i;
-
-    if (
-      item.user &&
-      item.user.nickname &&
-      !timePattern.test(item.user.nickname)
-    ) {
-      item.user.nickname =
-        `${timeStr} · ${item.user.nickname}`;
-    }
-  } catch (e) {}
+  if (p[0] === "joinchat" && p[1]) {
+    return `${s}://join?invite=${encodeURIComponent(p[1])}`;
+  }
+  if (p[0] === "addstickers" && p[1]) {
+    return `${s}://addstickers?set=${encodeURIComponent(p[1])}`;
+  }
+  if (p[0] === "share" && p[1] === "url") {
+    return `${s}://msg_url?url=${encodeURIComponent(qval(qs, "url"))}&text=${encodeURIComponent(qval(qs, "text"))}`;
+  }
+  if (p[1] && /^\d+$/.test(p[1])) {
+    return `${s}://resolve?domain=${encodeURIComponent(p[0])}&post=${encodeURIComponent(p[1])}`;
+  }
+  return `${s}://resolve?domain=${encodeURIComponent(p[0])}`;
 }
 
-if (Array.isArray(obj?.data)) {
-  for (const item of obj.data) {
-    processItem(item);
-  }
-}
+export default async function (ctx) {
+  const url = ctx.request.url;
+  const m = url.match(/^https?:\/\/t\.me\/(.+)$/i);
+  if (!m) return;
 
-$done({
-  body: JSON.stringify(obj)
-});
+  const client = (ctx.env?.CLIENT || "Telegram").trim();
+  const scheme = SCHEME[client] || "tg";
+
+  let tail = m[1];
+  if (tail.startsWith("s/")) tail = tail.slice(2);
+
+  const qi = tail.indexOf("?");
+  const path = qi < 0 ? tail : tail.slice(0, qi);
+  const qs = qi < 0 ? "" : tail.slice(qi + 1);
+
+  const loc = deeplink(scheme, path, qs);
+  if (!loc) return;
+
+  return ctx.respond({
+    status: 302,
+    headers: {
+      Location: loc,
+      "Cache-Control": "no-store, no-cache",
+    },
+    body: "",
+  });
+}
