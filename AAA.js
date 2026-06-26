@@ -7,7 +7,7 @@
 */
 
 const SCHEME = {
- Nagram: "tg",
+ Nagram: "nagram",
  Swiftgram: "sg",
  Turrit: "turrit",
  iMe: "ime",
