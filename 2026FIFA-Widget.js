@@ -142,6 +142,7 @@ function renderSmall(sections, now) {
   const today  = sections[1];
   const bg     = { light: '#FFFFFF', dark: '#2C2C2E' };
   const cardBg = { light: '#F2F2F7', dark: '#3A3A3C' };
+  let widgetPadding = 14;
 
   const children = [
     {
@@ -162,9 +163,9 @@ function renderSmall(sections, now) {
       font: { size: 12 }, textColor: { light: '#8E8E93', dark: '#636366' }, textAlign: 'center'
     });
     children.push({ type: 'spacer' });
-  } else {
+  } else if (today.list.length <= 2) {
     children.push({ type: 'spacer', length: 8 });
-    today.list.slice(0, 2).forEach((m, idx) => {
+    today.list.forEach((m, idx) => {
       const { scoreStr, scoreColor, statusLabel, statusColor } = matchStyle(m);
       children.push({
         type: 'stack', direction: 'column',
@@ -190,9 +191,43 @@ function renderSmall(sections, now) {
       });
       if (idx === 0) children.push({ type: 'spacer', length: 8 });
     });
+  } else {
+    const maxMatches = today.list.length;
+    
+    widgetPadding = maxMatches > 4 ? 10 : 12;
+    const cardPadding = maxMatches > 4 ? [4, 6, 4, 6] : [6, 6, 6, 6];
+    const rowGap = maxMatches > 4 ? 2 : 3;
+    const fontSize = maxMatches > 4 ? 10 : 11;
+    const timeWidth = maxMatches > 4 ? 26 : 28;
+    const scoreWidth = maxMatches > 4 ? 32 : 34;
+
+    children.push({ type: 'spacer', length: maxMatches > 4 ? 4 : 6 });
+    const listChildren = [];
+    
+    today.list.forEach((m, idx) => {
+      if (idx > 0) {
+        listChildren.push({ type: 'spacer', length: rowGap });
+      }
+      const { scoreStr, scoreColor } = matchStyle(m);
+      listChildren.push({
+        type: 'stack', direction: 'row', alignItems: 'center', gap: 2,
+        children: [
+          { type: 'text', text: m.time, font: { size: fontSize - 1.5 }, textColor: { light: '#8E8E93', dark: '#636366' }, width: timeWidth },
+          { type: 'text', text: m.home.name, font: { size: fontSize, weight: 'semibold' }, textColor: { light: '#1C1C1E', dark: '#F2F2F7' }, textAlign: 'right', flex: 1, maxLines: 1 },
+          { type: 'text', text: scoreStr, font: { size: fontSize, weight: 'bold' }, textColor: scoreColor, textAlign: 'center', width: scoreWidth },
+          { type: 'text', text: m.away.name, font: { size: fontSize, weight: 'semibold' }, textColor: { light: '#1C1C1E', dark: '#F2F2F7' }, textAlign: 'left', flex: 1, maxLines: 1 }
+        ]
+      });
+    });
+
+    children.push({
+      type: 'stack', direction: 'column',
+      backgroundColor: cardBg, borderRadius: 12, padding: cardPadding, gap: 0,
+      children: listChildren
+    });
   }
 
-  return { type: 'widget', backgroundColor: bg, padding: 14, gap: 0, children };
+  return { type: 'widget', backgroundColor: bg, padding: widgetPadding, gap: 0, children };
 }
 
 function renderMedium(sections, now) {
@@ -237,11 +272,7 @@ function renderLarge(sections, now) {
   const cardBg = { light: '#F2F2F7', dark: '#3A3A3C' };
   const timeStr = `${now.getMonth()+1}-${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  const limits = [
-    sections[0].list.length,
-    sections[1].list.length,
-    sections[2].list.length,
-  ];
+  const largeSections = [sections[1], sections[2]];
 
   const children = [
     {
@@ -255,9 +286,8 @@ function renderLarge(sections, now) {
     }
   ];
 
-  sections.forEach((sec, idx) => {
-    const limit = limits[idx];
-    const list = sec.list.slice(0, limit);
+  largeSections.forEach((sec) => {
+    const list = sec.list;
 
     children.push({
       type: 'stack', direction: 'row', alignItems: 'center', gap: 6,
@@ -267,14 +297,13 @@ function renderLarge(sections, now) {
       ]
     });
 
-    if (sec.list.length === 0) {
+    if (list.length === 0) {
       children.push({
         type: 'stack', backgroundColor: cardBg, borderRadius: 12, padding: [8, 12, 8, 12],
         children: [{ type: 'text', text: '暂无赛事', font: { size: 11 }, textColor: { light: '#8E8E93', dark: '#636366' } }]
       });
     } else {
       list.forEach(m => children.push(matchCard(m, cardBg)));
-
     }
   });
 
@@ -343,10 +372,10 @@ function smallCapsuleBg(key) {
   return { light: '#F2F2F7', dark: '#3A3A3C' };
 }
 
-function capsule(text, textColor, bgColor) {
+function capsule(text, textColor, bgColor, fontSize = 11, padding = [3, 8, 3, 8]) {
   return {
-    type: 'stack', backgroundColor: bgColor, borderRadius: 20, padding: [3, 8, 3, 8],
-    children: [{ type: 'text', text, font: { size: 11, weight: 'semibold' }, textColor, maxLines: 1 }]
+    type: 'stack', backgroundColor: bgColor, borderRadius: 20, padding: padding,
+    children: [{ type: 'text', text, font: { size: fontSize, weight: 'semibold' }, textColor, maxLines: 1 }]
   };
 }
 
