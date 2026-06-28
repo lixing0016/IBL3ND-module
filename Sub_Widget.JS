@@ -1,45 +1,37 @@
 /**
  * 机场订阅流量监控小组件
- * 
- * 📝 使用说明
+ * * 📝 使用说明
  * 1️⃣ 在Egern脚本当中添加 类型选择 通用 保存后 返回首页(分析) 点左上角 进去就能看到小组件界面 然后点右上角加号 选择刚才添加的脚本
- *    添加环境变量（在 Egern 中进入小组件"编辑环境变量"）
- * 
- *    格式：名称里填 NAME1  值里填 你的机场名称
- * 
- *    NAME1 = 翻墙                     # 机场名称（自定义）
- *    URL1 = https://xxx.com/sub...   # 订阅地址（必填）
- *    RESET1 = 1                      # 重置日（可选，每月1日重置）
- * 
- *    NAME2 = 机场B
- *    URL2 = https://yyy.com/sub...
- *    RESET2 = 15                     # 每月15日重置
- * 
- * 2️⃣ 参数说明：
- *    - NAME1-5：机场名称，显示在卡片上（必填，否则显示"机场订阅"）
- *    - URL1-5：订阅地址，从机场后台复制（必填）
- *    - RESET1-5：流量重置日，1-31 的数字（可选）
- * 
- * 3️⃣ 示例：
- *    NAME1 = 机场订阅
- *    URL1 = https://example.com/sub?token=abc123
- *    RESET1 = 1
- * 
- *    NAME2 = 备用机场
- *    URL2 = https://example2.com/sub?token=def456
- * 
- * 4️⃣ 注意事项：
- *    - 环境变量名称必须大写（NAME1、URL1 等）
- *    - 至少需要配置 URL1 才能显示
- *    - 订阅地址需要包含完整的 token
- *    - 小组件每1小时自动刷新一次
- *    - 自动适配系统深色/浅色模式（无需配置）
+ * 添加环境变量（在 Egern 中进入小组件"编辑环境变量"）
+ * * 格式：名称里填 NAME1  值里填 你的机场名称
+ * * NAME1 = 翻墙                     # 机场名称（自定义）
+ * URL1 = https://xxx.com/sub...   # 订阅地址（必填）
+ * RESET1 = 1                      # 重置日（可选，每月1日重置）
+ * * NAME2 = 机场B
+ * URL2 = https://yyy.com/sub...
+ * RESET2 = 15                     # 每月15日重置
+ * * 2️⃣ 参数说明：
+ * - NAME1-5：机场名称，显示在卡片上（必填，否则显示"机场订阅"）
+ * - URL1-5：订阅地址，从机场后台复制（必填）
+ * - RESET1-5：流量重置日，1-31 的数字（可选）
+ * * 3️⃣ 示例：
+ * NAME1 = 机场订阅
+ * URL1 = https://example.com/sub?token=abc123
+ * RESET1 = 1
+ * * NAME2 = 备用机场
+ * URL2 = https://example2.com/sub?token=def456
+ * * 4️⃣ 注意事项：
+ * - 环境变量名称必须大写（NAME1、URL1 等）
+ * - 至少需要配置 URL1 才能显示
+ * - 订阅地址需要包含完整的 token
+ * - 小组件每1小时自动刷新一次
+ * - 自动适配系统深色/浅色模式（无需配置）
  *
  * 5️⃣ 显示数量说明：
  * - 小尺寸 (systemSmall)：自动显示 2 条
- * - 中尺寸 (systemMedium)：自动显示 2 条
+ * - 中尺寸 (systemMedium)：自动显示 3 条
  * - 大尺寸 (systemLarge)：自动显示 5 条
- * - 最多支持 5 个机场 中小尺寸只显示两个 大尺寸显示五个 需要显示多条 可以在组件页面右上角 重新添加组件就可以了 祝您使用愉快！
+ * - 最多支持 5 个机场 中小尺寸展示受限 大尺寸显示五个 需要显示多条 可以在组件页面右上角 重新添加组件就可以了 祝您使用愉快！
  * - 加了缓存机制 如果数据存在且距离上次请求未超过 1 小时，则直接返回缓存结果，不再发起网络请求，避免风控 导致机场主拉黑
  */
 
@@ -121,16 +113,20 @@ export default async function (ctx) {
 
  const widgetFamily = ctx.widgetFamily;
  const isLarge = widgetFamily === "systemLarge";
- const maxDisplay = isLarge ? 5 : 2;
+ const isMedium = widgetFamily === "systemMedium";
+ 
+ const maxDisplay = isLarge ? 5 : (isMedium ? 3 : 2);
 
  const numSubs = Math.min(slots.length, maxDisplay);
  const isCompact = numSubs >= 2;
+ 
+ const isMediumThree = isMedium && numSubs === 3;
 
  return {
   type: "widget",
   backgroundGradient: bgGradient,
-  padding: isCompact ? 8 : 12,
-  gap: isCompact ? 5 : 8,
+  padding: isMediumThree ? 6 : (isCompact ? 8 : 12),
+  gap: isMediumThree ? 4 : (isCompact ? 5 : 8),
   refreshAfter: refreshTime,
   children: [
    {
@@ -149,8 +145,8 @@ export default async function (ctx) {
    {
     type: "stack",
     direction: "column",
-    gap: 6,
-    children: results.slice(0, maxDisplay).map((r) => buildCard(r, colors, ctx)),
+    gap: isMediumThree ? 4 : 6,
+    children: results.slice(0, maxDisplay).map((r) => buildCard(r, colors, ctx, isMediumThree)),
    },
   ],
  };
@@ -220,7 +216,7 @@ async function fetchInfo(ctx, slot) {
  return { name: slot.name, error: true };
 }
 
-function buildCard(result, colors, ctx) {
+function buildCard(result, colors, ctx, isMediumThree) {
  const { name, error, used, totalBytes, percent, expire, remainDays } = result;
 
  let statusColor = colors.accentGreen;
@@ -229,13 +225,17 @@ function buildCard(result, colors, ctx) {
  else if (percent >= 80) statusColor = colors.accentOrange;
  else if (percent >= 50) statusColor = colors.accentPurple;
 
+ const cardPadding = isMediumThree ? [3, 8, 3, 8] : [8, 10];
+ const innerGap = isMediumThree ? 2 : 5;
+ const barHeight = isMediumThree ? 3 : 5;
+
  if (error) {
   return {
    type: "stack",
    direction: "row",
    alignItems: "center",
    gap: 6,
-   padding: [8, 10],
+   padding: cardPadding,
    backgroundColor: { light: "#FFF5F5", dark: "#3B1F1F" },
    borderRadius: 8,
    children: [
@@ -267,8 +267,8 @@ function buildCard(result, colors, ctx) {
  return {
   type: "stack",
   direction: "column",
-  gap: 5,
-  padding: [8, 10],
+  gap: innerGap,
+  padding: cardPadding,
   backgroundColor: { light: "#FFFFFF", dark: "#2B2B2D" },
   borderRadius: 8,
   borderWidth: 1,
@@ -288,11 +288,11 @@ function buildCard(result, colors, ctx) {
    {
     type: "stack",
     direction: "row",
-    height: 5,
+    height: barHeight,
     borderRadius: 3,
     children: [
-     { type: "stack", flex: Math.max(progressPercent, 1), height: 5, backgroundColor: statusColor, borderRadius: 3 },
-     { type: "stack", flex: Math.max(100 - progressPercent, 1), height: 5, backgroundColor: { light: "#E8E8EA", dark: "#48484A" }, borderRadius: 3 },
+     { type: "stack", flex: Math.max(progressPercent, 1), height: barHeight, backgroundColor: statusColor, borderRadius: 3 },
+     { type: "stack", flex: Math.max(100 - progressPercent, 1), height: barHeight, backgroundColor: { light: "#E8E8EA", dark: "#48484A" }, borderRadius: 3 },
     ],
    },
    {
