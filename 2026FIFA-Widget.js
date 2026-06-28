@@ -1,5 +1,5 @@
 /**
- * 2026 世界杯 - Egern 小组件
+ * 2026 世界杯 Egern 小组件
  * 数据来源：ESPN
  */
 
@@ -91,10 +91,12 @@ export default async function (ctx) {
   }
 
   if (!matches.length) return renderError('赛程同步中...');
+
   const bjStr = d => d.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
   const todayBJ    = bjStr(now);
   const yesterdayBJ = bjStr(new Date(now.getTime() - 86400000));
   const tomorrowBJ  = bjStr(new Date(now.getTime() + 86400000));
+
   const fmtDay = s => `${parseInt(s.slice(4,6))}-${parseInt(s.slice(6,8))}`;
 
   const sections = [
@@ -272,7 +274,11 @@ function renderLarge(sections, now) {
   const cardBg = { light: '#F2F2F7', dark: '#3A3A3C' };
   const timeStr = `${now.getMonth()+1}-${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  const largeSections = [sections[1], sections[2]];
+  const limits = [
+    sections[0].list.length,
+    sections[1].list.length,
+    sections[2].list.length,
+  ];
 
   const children = [
     {
@@ -286,8 +292,9 @@ function renderLarge(sections, now) {
     }
   ];
 
-  largeSections.forEach((sec) => {
-    const list = sec.list;
+  sections.forEach((sec, idx) => {
+    const limit = limits[idx];
+    const list = sec.list.slice(0, limit);
 
     children.push({
       type: 'stack', direction: 'row', alignItems: 'center', gap: 6,
@@ -297,13 +304,14 @@ function renderLarge(sections, now) {
       ]
     });
 
-    if (list.length === 0) {
+    if (sec.list.length === 0) {
       children.push({
         type: 'stack', backgroundColor: cardBg, borderRadius: 12, padding: [8, 12, 8, 12],
         children: [{ type: 'text', text: '暂无赛事', font: { size: 11 }, textColor: { light: '#8E8E93', dark: '#636366' } }]
       });
     } else {
       list.forEach(m => children.push(matchCard(m, cardBg)));
+
     }
   });
 
@@ -372,10 +380,10 @@ function smallCapsuleBg(key) {
   return { light: '#F2F2F7', dark: '#3A3A3C' };
 }
 
-function capsule(text, textColor, bgColor, fontSize = 11, padding = [3, 8, 3, 8]) {
+function capsule(text, textColor, bgColor) {
   return {
-    type: 'stack', backgroundColor: bgColor, borderRadius: 20, padding: padding,
-    children: [{ type: 'text', text, font: { size: fontSize, weight: 'semibold' }, textColor, maxLines: 1 }]
+    type: 'stack', backgroundColor: bgColor, borderRadius: 20, padding: [3, 8, 3, 8],
+    children: [{ type: 'text', text, font: { size: 11, weight: 'semibold' }, textColor, maxLines: 1 }]
   };
 }
 
